@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Trash2, Edit2, Check, X, FileSpreadsheet, Eye, EyeOff, Calculator } from 'lucide-react';
+import { Trash2, Edit2, Check, X, FileSpreadsheet, Calculator } from 'lucide-react';
 import { Room, Position } from '../types';
 
 interface PositionTableProps {
@@ -22,7 +22,6 @@ export const PositionTable: React.FC<PositionTableProps> = ({
 }) => {
   const [editingPosId, setEditingPosId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState('');
-  const [showAllRooms, setShowAllRooms] = useState(false);
 
   const startEditing = (pos: Position) => {
     setEditingPosId(pos.id);
@@ -207,103 +206,7 @@ export const PositionTable: React.FC<PositionTableProps> = ({
         )}
       </div>
 
-      {/* 2. Global Project Summary */}
-      <div className="bg-[#141414] text-white rounded-3xl p-6 shadow-sm border border-[#141414]/10" id="grand-summary-widget">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2 font-sans">
-              Projekt-Gesamtsumme
-            </h3>
-            <p className="text-xs text-white/60 mt-0.5">
-              Zusammenfassung aller Räume und Leistungen
-            </p>
-          </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-white/50 font-mono">Gesamt:</span>
-            <span className="text-3xl font-extrabold text-brand-accent2 tracking-tight font-mono">
-              {calculateGrandTotal().toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-white/10 text-sm">
-          <div>
-            <span className="text-xs text-white/50 block">Räume gesamt</span>
-            <span className="text-lg font-bold block mt-0.5 font-mono">{allRooms.length}</span>
-          </div>
-          <div>
-            <span className="text-xs text-white/50 block">Positionen gesamt</span>
-            <span className="text-lg font-bold block mt-0.5 font-mono">{totalPositionsCount}</span>
-          </div>
-          <div className="col-span-2 sm:col-span-1">
-            <button
-              id="btn-toggle-full-breakdown"
-              onClick={() => setShowAllRooms(!showAllRooms)}
-              disabled={totalPositionsCount === 0}
-              className={`w-full py-2.5 px-4 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                totalPositionsCount === 0 
-                  ? 'border-white/5 text-white/30 cursor-not-allowed opacity-50' 
-                  : 'border-white/10 hover:border-white/20 text-white/80 hover:text-white bg-white/5 hover:bg-white/10 active:scale-95'
-              }`}
-            >
-              {showAllRooms ? (
-                <>
-                  <EyeOff className="w-3.5 h-3.5" /> Aufteilung verbergen
-                </>
-              ) : (
-                <>
-                  <Eye className="w-3.5 h-3.5" /> Gesamtes Aufmaß zeigen
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Expandable Project-wide breakdown */}
-        {showAllRooms && totalPositionsCount > 0 && (
-          <div className="mt-5 pt-5 border-t border-white/10 space-y-4 animate-fade-in" id="project-breakdown-panel">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white/50">Aufmaß-Dokumentation</h4>
-            {allRooms.map((room, roomIdx) => {
-              if (room.positions.length === 0) return null;
-              const roomTotal = calculateRoomTotal(room);
-
-              return (
-                <div key={room.id} className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                  <div className="flex justify-between items-center mb-2.5 pb-1.5 border-b border-white/5">
-                    <span className="text-xs font-bold text-brand-accent1">
-                      Raum #{roomIdx + 1}: {room.name}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-white">
-                      {roomTotal.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-                    </span>
-                  </div>
-                  <ul className="space-y-2 text-xs text-white/75">
-                    {room.positions.map((pos, posIdx) => (
-                      <li key={pos.id} className="flex justify-between items-center">
-                        <div className="flex items-baseline gap-2 min-w-0">
-                          <span className="text-[10px] font-mono text-white/30">
-                            {roomIdx + 1}.{String(posIdx + 1).padStart(2, '0')}
-                          </span>
-                          <span className="truncate">{pos.name}</span>
-                        </div>
-                        <div className="font-mono flex-shrink-0 flex gap-4">
-                          <span>
-                            {pos.quantity.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {pos.unit}
-                          </span>
-                          <span className="text-brand-accent2 w-16 text-right">
-                            {pos.totalPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 };

@@ -620,14 +620,19 @@ export default function App() {
                 onDeleteRoom={handleDeleteRoom}
               />
 
-              {/* Export Settings & Project Total Statistics Panel inside sidebar */}
-              <ExportSettingsPanel
-                project={activeProject}
-                settings={exportSettings}
-              />
             </>
           )}
         </div>
+
+        {/* Bottom Pinned Gesamtsumme & Export Section */}
+        {activeProject && (
+          <div className="p-4 border-t border-[#141414]/10 bg-gray-50/70">
+            <ExportSettingsPanel
+              project={activeProject}
+              settings={exportSettings}
+            />
+          </div>
+        )}
       </aside>
 
       {/* --- RIGHT WORKSPACE CONTAINER (Scrolls independently on lg) --- */}
