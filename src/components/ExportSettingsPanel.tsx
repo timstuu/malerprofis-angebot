@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Download, Check, Calculator, FileSpreadsheet } from 'lucide-react';
+import { Download, Check, Calculator } from 'lucide-react';
 import { ExportSettings, Project } from '../types';
 import { generateHandicraftCSV, downloadCSVFile } from '../utils/exportUtils';
 
@@ -54,7 +54,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
   };
 
   return (
-    <div className="w-full bg-white border border-[#141414]/10 p-5 rounded-2xl shadow-3xs relative flex flex-col gap-4" id="export-panel">
+    <div className="w-full flex flex-col space-y-4 relative" id="export-panel">
       
       {/* Toast Notification */}
       {showToast && (
@@ -64,28 +64,33 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
         </div>
       )}
 
-      {/* Header */}
+      {/* Header section (container-less) */}
       <div>
-        <h2 className="text-sm font-bold text-[#141414] flex items-center gap-2 font-sans tracking-tight">
-          <FileSpreadsheet className="w-4 h-4 text-brand-accent1" />
+        <h2 className="text-lg font-bold text-[#141414] font-sans tracking-tight">
           Auswertung & Export
         </h2>
-        <p className="text-[11px] text-[#141414]/55 mt-0.5">
+        <p className="text-xs text-[#141414]/60 mt-0.5">
           Projekt-Statistiken und HANDICRAFT-Datei (Sonderfunktion 602)
         </p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 gap-2.5 text-xs">
-        <div className="bg-gray-50 p-3 rounded-xl border border-[#141414]/5">
-          <span className="text-[10px] text-[#141414]/40 font-bold block uppercase tracking-wider">Räume</span>
-          <span className="text-base font-black text-[#141414] block mt-0.5">{roomCount}</span>
+      {/* Grouped Statistics & Export Container */}
+      <div className="bg-white border border-[#141414]/10 rounded-2xl overflow-hidden divide-y divide-[#141414]/5 shadow-3xs">
+        
+        {/* Row 1: Rooms & Positions count side-by-side */}
+        <div className="grid grid-cols-2 divide-x divide-[#141414]/5 text-xs text-center">
+          <div className="p-3">
+            <span className="text-[10px] text-[#141414]/40 font-bold block uppercase tracking-wider">Räume</span>
+            <span className="text-base font-black text-[#141414] block mt-0.5">{roomCount}</span>
+          </div>
+          <div className="p-3">
+            <span className="text-[10px] text-[#141414]/40 font-bold block uppercase tracking-wider">Positionen</span>
+            <span className="text-base font-black text-[#141414] block mt-0.5">{positionCount}</span>
+          </div>
         </div>
-        <div className="bg-gray-50 p-3 rounded-xl border border-[#141414]/5">
-          <span className="text-[10px] text-[#141414]/40 font-bold block uppercase tracking-wider">Positionen</span>
-          <span className="text-base font-black text-[#141414] block mt-0.5">{positionCount}</span>
-        </div>
-        <div className="bg-brand-accent1/5 p-3.5 rounded-xl border border-brand-accent1/10 col-span-2 flex items-center justify-between">
+
+        {/* Row 2: Total Sum */}
+        <div className="p-4 bg-brand-accent1/5 flex items-center justify-between">
           <div>
             <span className="text-[10px] text-brand-accent1 font-bold block uppercase tracking-wider">Gesamtsumme</span>
             <span className="text-lg font-black text-[#141414] block mt-0.5">
@@ -94,21 +99,22 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
           </div>
           <Calculator className="w-8 h-8 text-brand-accent1/20" />
         </div>
-      </div>
 
-      {/* Export Button */}
-      <button
-        id="btn-export-handicraft"
-        onClick={triggerExport}
-        disabled={positionCount === 0}
-        className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
-          positionCount === 0
-            ? 'bg-gray-100 text-[#141414]/30 cursor-not-allowed border border-[#141414]/5'
-            : 'bg-brand-accent1 hover:bg-brand-accent1/90 text-white shadow-3xs'
-        }`}
-      >
-        <Download className="w-3.5 h-3.5" /> HANDICRAFT-Export (.csv)
-      </button>
+        {/* Row 3: Export Button */}
+        <button
+          id="btn-export-handicraft"
+          onClick={triggerExport}
+          disabled={positionCount === 0}
+          className={`w-full py-3.5 px-4 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            positionCount === 0
+              ? 'bg-gray-50 text-[#141414]/30 cursor-not-allowed'
+              : 'bg-white hover:bg-gray-50 text-brand-accent1 hover:text-brand-accent1/90'
+          }`}
+        >
+          <Download className="w-4 h-4" /> HANDICRAFT-Export (.csv)
+        </button>
+
+      </div>
 
     </div>
   );
