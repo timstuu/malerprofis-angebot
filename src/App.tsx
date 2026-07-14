@@ -17,7 +17,8 @@ import {
   FolderGit, 
   Database,
   ChevronDown,
-  X
+  X,
+  Menu
 } from 'lucide-react';
 
 import { Project, Room, Position, ServiceTile, ExportSettings } from './types';
@@ -141,6 +142,9 @@ export default function App() {
   
   const [serviceTiles, setServiceTiles] = useState<ServiceTile[]>([]);
   const [exportSettings, setExportSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
+  
+  // Sidebar visibility for mobile / tablet portrait
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Modals & Popups
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -486,21 +490,41 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-bg flex flex-col font-sans text-[#141414] antialiased" id="main-app-container">
+    <div className="min-h-screen bg-brand-bg flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden font-sans text-[#141414] antialiased" id="main-app-container">
       
-      {/* --- HEADER NAVIGATION --- */}
-      <header className="bg-white border-b border-[#141414]/10 shadow-xs sticky top-0 z-40" id="app-header">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <img src="/icons/logo.png" className="h-11 w-auto" alt="Malerprofis Uderstadt Logo" referrerPolicy="no-referrer" />
-          </div>
+      {/* Backdrop overlay for mobile/portrait sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-[#141414]/40 backdrop-blur-xs z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
+      {/* --- LEFT SIDEBAR (Full height on lg) --- */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-[#141414]/10 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:w-80 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {/* Sidebar Header: Logo & Close Button */}
+        <div className="p-4 border-b border-[#141414]/5 flex items-center justify-between">
+          <img src="/icons/logo.png" className="h-10 w-auto" alt="Malerprofis Uderstadt Logo" referrerPolicy="no-referrer" />
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-1.5 hover:bg-gray-100 rounded-lg text-[#141414]/40 hover:text-[#141414]/80 transition-all cursor-pointer lg:hidden"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable Sidebar Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          
           {/* Project Selection / Actions */}
-          <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto justify-end">
+          <div className="bg-gray-50 p-4 rounded-2xl border border-[#141414]/5 space-y-3">
+            <label className="block text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">
+              Projekt auswählen
+            </label>
             {projects.length > 0 ? (
-              <div className="relative inline-flex items-center bg-gray-100 hover:bg-gray-250/80 text-[#141414] rounded-xl px-4 py-2.5 text-sm transition-all shadow-3xs group min-w-[200px] max-w-xs cursor-pointer">
+              <div className="relative flex items-center bg-white border border-[#141414]/10 rounded-xl px-3 py-2 text-sm shadow-3xs cursor-pointer">
                 <FolderOpen className="w-4 h-4 text-brand-accent1 mr-2 flex-shrink-0" />
                 <select
                   id="project-selector"
@@ -510,44 +534,45 @@ export default function App() {
                     setActiveProjectId(pid);
                     const p = projects.find(proj => proj.id === pid);
                     setActiveRoomId(p?.rooms[0]?.id || null);
+                    setIsSidebarOpen(false);
                   }}
                   className="bg-transparent text-[#141414] font-bold pr-6 focus:outline-none cursor-pointer w-full appearance-none truncate"
                 >
                   {projects.map((p) => (
                     <option key={p.id} value={p.id} className="bg-white text-[#141414]">
-                      {p.name} ({p.projectNumber})
+                      {p.name}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-[#141414]/40 absolute right-3 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-[#141414]/45 absolute right-3 pointer-events-none" />
               </div>
             ) : (
-              <span className="text-xs text-[#141414]/40">Kein Projekt angelegt</span>
+              <span className="text-xs text-[#141414]/40 block">Kein Projekt angelegt</span>
             )}
 
+            {/* Project management buttons */}
             {activeProject && (
-              <button
-                id="btn-edit-project"
-                onClick={() => {
-                  setProjectToEdit(activeProject);
-                  setIsProjectModalOpen(true);
-                }}
-                className="p-2.5 bg-gray-100 hover:bg-gray-250/80 text-[#141414]/60 hover:text-brand-accent1 rounded-xl transition-all cursor-pointer"
-                title="Projekt Details bearbeiten"
-              >
-                <FileEdit className="w-4 h-4" />
-              </button>
-            )}
-
-            {activeProject && (
-              <button
-                id="btn-delete-project"
-                onClick={() => handleDeleteProject(activeProject.id)}
-                className="p-2.5 bg-gray-100 hover:bg-red-50 text-[#141414]/60 hover:text-red-500 rounded-xl transition-all cursor-pointer"
-                title="Projekt komplett löschen"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  id="btn-edit-project"
+                  onClick={() => {
+                    setProjectToEdit(activeProject);
+                    setIsProjectModalOpen(true);
+                  }}
+                  className="flex-1 py-2 bg-white hover:bg-gray-50 border border-[#141414]/10 text-xs text-[#141414]/70 hover:text-brand-accent1 rounded-xl transition-all flex items-center justify-center gap-1 font-bold cursor-pointer"
+                  title="Projekt Details bearbeiten"
+                >
+                  <FileEdit className="w-3.5 h-3.5" /> Bearbeiten
+                </button>
+                <button
+                  id="btn-delete-project"
+                  onClick={() => handleDeleteProject(activeProject.id)}
+                  className="p-2 bg-white hover:bg-red-50 border border-[#141414]/10 text-red-500 rounded-xl transition-all cursor-pointer"
+                  title="Projekt komplett löschen"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
 
             <button
@@ -556,20 +581,70 @@ export default function App() {
                 setProjectToEdit(null);
                 setIsProjectModalOpen(true);
               }}
-              className="px-4 py-2.5 bg-brand-accent1 hover:bg-brand-accent1/90 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+              className="w-full py-2 bg-brand-accent1 hover:bg-brand-accent1/90 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-3xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Neues Projekt
             </button>
           </div>
-        </div>
-      </header>
 
-      {/* --- SUB-HEADER: ACTIVE PROJECT METADATA CARD --- */}
-      {activeProject && (
-        <div className="bg-white border-b border-[#141414]/5 shadow-3xs" id="project-metadata-bar">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          {activeProject && (
+            <>
+              {/* Room list inside sidebar */}
+              <RoomList
+                rooms={activeProject.rooms}
+                activeRoomId={activeRoomId}
+                onSelectRoom={(id) => {
+                  setActiveRoomId(id);
+                  setIsSidebarOpen(false);
+                }}
+                onAddRoom={(name) => {
+                  handleAddRoom(name);
+                  setIsSidebarOpen(false);
+                }}
+                onEditRoom={handleEditRoom}
+                onDeleteRoom={handleDeleteRoom}
+              />
+
+              {/* Export settings inside sidebar */}
+              <ExportSettingsPanel
+                project={activeProject}
+                settings={exportSettings}
+                onUpdateSettings={saveExportSettingsToStorage}
+              />
+            </>
+          )}
+
+        </div>
+      </aside>
+
+      {/* --- RIGHT WORKSPACE CONTAINER (Scrolls independently on lg) --- */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto lg:h-screen lg:overflow-y-auto" id="workspace-container">
+        
+        {/* Mobile Header (visible only on mobile/portrait < 1024px) */}
+        <header className="bg-white border-b border-[#141414]/10 shadow-xs px-4 py-3 flex items-center justify-between sticky top-0 z-30 lg:hidden" id="mobile-header">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-xl text-[#141414]/70 hover:text-[#141414] transition-all cursor-pointer"
+              title="Menü öffnen"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <img src="/icons/logo.png" className="h-8 w-auto" alt="Logo" referrerPolicy="no-referrer" />
+          </div>
+          {activeProject && (
+            <div className="text-right max-w-[180px] sm:max-w-xs">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider truncate">Aktives Projekt</span>
+              <span className="text-xs font-black text-[#141414] block truncate">{activeProject.name}</span>
+            </div>
+          )}
+        </header>
+
+        {/* --- PROJECT METADATA BAR (Header of Workspace) --- */}
+        {activeProject && (
+          <div className="bg-white border-b border-[#141414]/5 shadow-3xs px-6 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3" id="project-metadata-bar">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <span className="text-xs bg-gray-100 border border-[#141414]/5 text-[#141414]/70 font-bold px-3 py-1.5 rounded-xl">
+              <span className="text-xs bg-gray-100 border border-[#141414]/5 text-[#141414]/70 px-3 py-1.5 rounded-xl font-medium">
                 Projekt-Nr: <code className="font-mono text-brand-accent1 font-bold">{activeProject.projectNumber}</code>
               </span>
               <span className="text-xs text-[#141414]/55 font-medium">
@@ -582,131 +657,110 @@ export default function App() {
               )}
             </div>
 
-            {/* Quick Helper to load a fully populated sample database */}
+            {/* Quick Helper to load sample data */}
             <button
               id="btn-load-sample"
-              onClick={handleLoadSampleProject}
+              onClick={() => {
+                handleLoadSampleProject();
+                setIsSidebarOpen(false);
+              }}
               className="text-[11px] font-bold text-brand-accent1 hover:text-brand-accent1/90 flex items-center gap-1.5 bg-brand-accent1/10 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
             >
               <Database className="w-3.5 h-3.5" /> Demo-Projekt laden (+ Spachteln, Schleifen, Vlies)
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* --- MAIN CORE CONTAINER --- */}
-      {activeProject ? (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6" id="workspace-main">
-          
-          {/* Two-column responsive Grid (5/7 allocation) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* --- MAIN WORKSPACE AREA --- */}
+        {activeProject ? (
+          <main className="flex-1 w-full p-4 lg:p-6 space-y-6" id="workspace-main">
             
-            {/* Left Side: Room Management & Entered Measurements (lg:col-span-5) */}
-            <div className="lg:col-span-5 space-y-6">
-              
-              <RoomList
-                rooms={activeProject.rooms}
-                activeRoomId={activeRoomId}
-                onSelectRoom={setActiveRoomId}
-                onAddRoom={handleAddRoom}
-                onEditRoom={handleEditRoom}
-                onDeleteRoom={handleDeleteRoom}
+            {/* 1. Service Tile Grid (Selection) */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+              <ServiceTileGrid
+                tiles={serviceTiles}
+                onTileClick={(tile) => {
+                  if (activeProject.rooms.length === 0) {
+                    alert('Bitte lege zuerst mindestens einen Raum an, um Aufmaße hinzuzufügen.');
+                    return;
+                  }
+                  setSelectedTileForInput(tile);
+                }}
+                onAddTile={handleAddCustomTile}
+                onEditTile={handleEditCustomTile}
+                onDeleteTile={handleDeleteCustomTile}
               />
 
-              <PositionTable
-                activeRoom={activeRoom}
-                onEditPosition={handleEditPositionQuantity}
-                onDeletePosition={handleDeletePosition}
-                allRooms={activeProject.rooms}
-              />
-
-            </div>
-
-            {/* Right Side: Interactive POS grid (Kacheln) & Handicraft Export Panel (lg:col-span-7) */}
-            <div className="lg:col-span-7 space-y-6">
-              
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-                <ServiceTileGrid
-                  tiles={serviceTiles}
-                  onTileClick={(tile) => {
-                    if (activeProject.rooms.length === 0) {
-                      alert('Bitte lege zuerst mindestens einen Raum an, um Aufmaße hinzuzufügen.');
-                      return;
-                    }
-                    setSelectedTileForInput(tile);
-                  }}
-                  onAddTile={handleAddCustomTile}
-                  onEditTile={handleEditCustomTile}
-                  onDeleteTile={handleDeleteCustomTile}
-                />
-
-                {/* Reset Catalog options */}
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs">
-                  <span className="text-slate-400">
-                    Modus: {serviceTiles.length} Kacheln verfügbar
-                  </span>
-                  <button
-                    id="btn-reset-catalog"
-                    onClick={handleResetCatalogToDefault}
-                    className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Fiktive Stammdaten wiederherstellen
-                  </button>
-                </div>
+              {/* Reset Catalog options */}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs">
+                <span className="text-slate-400">
+                  Modus: {serviceTiles.length} Kacheln verfügbar
+                </span>
+                <button
+                  id="btn-reset-catalog"
+                  onClick={handleResetCatalogToDefault}
+                  className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" /> Fiktive Stammdaten wiederherstellen
+                </button>
               </div>
-
-              <ExportSettingsPanel
-                project={activeProject}
-                settings={exportSettings}
-                onUpdateSettings={saveExportSettingsToStorage}
-              />
-
             </div>
 
-          </div>
+            {/* 2. Position Table (Measurements) */}
+            <PositionTable
+              activeRoom={activeRoom}
+              onEditPosition={handleEditPositionQuantity}
+              onDeletePosition={handleDeletePosition}
+              allRooms={activeProject.rooms}
+            />
 
-        </main>
-      ) : (
-        /* --- EMPTY STATE ONBOARDING (IF NO PROJECTS EXIST) --- */
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto" id="workspace-empty">
-          <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 border border-indigo-100 shadow-md">
-            <Paintbrush className="w-10 h-10" />
-          </div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight font-display">Maler-Aufmaß-Profi MVP</h2>
-          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-            Es ist aktuell kein Projekt geladen. Lege ein neues Projekt für deinen Kunden an, um mit der schnellen Kachel-Aufmaßerfassung auf der Baustelle zu starten.
-          </p>
+          </main>
+        ) : (
+          /* --- EMPTY STATE ONBOARDING --- */
+          <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto" id="workspace-empty">
+            <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 border border-indigo-100 shadow-md">
+              <Paintbrush className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight font-display">Maler-Aufmaß-Profi MVP</h2>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              Es ist aktuell kein Projekt geladen. Lege ein neues Projekt für deinen Kunden an, um mit der schnellen Kachel-Aufmaßerfassung auf der Baustelle zu starten.
+            </p>
 
-          <div className="w-full space-y-3 mt-8">
-            <button
-              id="btn-onboarding-create-project"
-              onClick={() => {
-                setProjectToEdit(null);
-                setIsProjectModalOpen(true);
-              }}
-              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-5 h-5" /> Neues Projekt anlegen
-            </button>
-            
-            <button
-              id="btn-onboarding-load-demo"
-              onClick={handleLoadSampleProject}
-              className="w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-indigo-600 font-bold rounded-2xl shadow-3xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Database className="w-4 h-4" /> Demo-Projekt laden (EFH Müller)
-            </button>
-          </div>
-        </main>
-      )}
+            <div className="w-full space-y-3 mt-8">
+              <button
+                id="btn-onboarding-create-project"
+                onClick={() => {
+                  setProjectToEdit(null);
+                  setIsProjectModalOpen(true);
+                }}
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-5 h-5" /> Neues Projekt anlegen
+              </button>
+              
+              <button
+                id="btn-onboarding-load-demo"
+                onClick={() => {
+                  handleLoadSampleProject();
+                  setIsSidebarOpen(false);
+                }}
+                className="w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-indigo-600 font-bold rounded-2xl shadow-3xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Database className="w-4 h-4" /> Demo-Projekt laden (EFH Müller)
+              </button>
+            </div>
+          </main>
+        )}
 
-      {/* --- FOOTER REGISTRY --- */}
-      <footer className="bg-slate-900 border-t border-slate-800 text-slate-500 text-xs py-4 text-center mt-auto" id="app-footer-brand">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <span>&copy; 2026 Maler-Aufmaß-Profi MVP. Lokaler Offline-Modus aktiv.</span>
-          <span className="font-semibold text-slate-400">Kompatibel mit HANDICRAFT "Sonderfunktion 602"</span>
-        </div>
-      </footer>
+        {/* --- FOOTER REGISTRY --- */}
+        <footer className="bg-slate-900 border-t border-slate-800 text-slate-500 text-xs py-4 text-center mt-auto" id="app-footer-brand">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>&copy; 2026 Maler-Aufmaß-Profi MVP. Lokaler Offline-Modus aktiv.</span>
+            <span className="font-semibold text-slate-400">Kompatibel mit HANDICRAFT "Sonderfunktion 602"</span>
+          </div>
+        </footer>
+
+      </div>
 
       {/* --- MODAL 1: PROJECT METADATA CREATOR / EDITOR --- */}
       <ProjectDetailsModal
