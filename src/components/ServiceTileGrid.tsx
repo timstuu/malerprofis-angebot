@@ -4,25 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Check, Sparkles, Paintbrush, Layers, Droplets, Ruler } from 'lucide-react';
+import { Plus, Check, Sparkles } from 'lucide-react';
 import { ServiceTile } from '../types';
-
-const getTileIcon = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes('streichen') || lower.includes('lackier') || lower.includes('maler')) {
-    return <Paintbrush className="w-7 h-7" />;
-  }
-  if (lower.includes('spachteln') || lower.includes('schleifen') || lower.includes('tapete') || lower.includes('vlies')) {
-    return <Layers className="w-7 h-7" />;
-  }
-  if (lower.includes('grundieren') || lower.includes('dispersion') || lower.includes('tiefgrund')) {
-    return <Droplets className="w-7 h-7" />;
-  }
-  if (lower.includes('abklebe') || lower.includes('abdeck') || lower.includes('aufmaß')) {
-    return <Ruler className="w-7 h-7" />;
-  }
-  return <Paintbrush className="w-7 h-7" />;
-};
 
 interface ServiceTileGridProps {
   tiles: ServiceTile[];
@@ -91,16 +74,6 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
     setColor('slate');
   };
 
-  const startEdit = (tile: ServiceTile, e: React.MouseEvent) => {
-    e.stopPropagation(); // Avoid triggering quantity entry
-    setIsEditing(tile.id);
-    setName(tile.name);
-    setUnit(tile.unit);
-    setPrice(String(tile.price).replace('.', ','));
-    setColor(tile.color || 'slate');
-    setIsAdding(false);
-  };
-
   const cancelForm = () => {
     setIsAdding(false);
     setIsEditing(null);
@@ -117,10 +90,10 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
       {/* Grid Headers and Toggle Form */}
       <div className="flex justify-between items-center mb-5">
         <div>
-          <h2 className="text-xl font-bold text-[#141414] tracking-tight flex items-center gap-2 font-sans">
-             Leistungen (POS-Grid)
+          <h2 className="text-xl font-bold text-[#141414] tracking-tight font-sans">
+             Leistungen
           </h2>
-          <p className="text-xs text-[#141414]/60">
+          <p className="text-xs text-[#141414]/60 mt-0.5">
             Kachel antippen zur schnellen Aufmaß-Erfassung
           </p>
         </div>
@@ -229,8 +202,8 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
         </form>
       )}
 
-      {/* POS Tiles Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* POS Tiles Grid (4 columns on larger viewports) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {tiles.map((tile) => {
           const colors = colorMap[tile.color || 'slate'] || colorMap.slate;
           return (
@@ -238,44 +211,16 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
               key={tile.id}
               id={`service-tile-${tile.id}`}
               onClick={() => onTileClick(tile)}
-              className={`relative bg-white border border-[#141414]/5 ${colors.hover} rounded-3xl p-6 flex flex-col justify-center items-center gap-4 transition-all duration-250 text-center shadow-xs cursor-pointer group active:scale-95`}
+              className={`relative bg-white border border-[#141414]/5 ${colors.hover} rounded-2xl p-4 flex flex-col justify-between items-stretch transition-all duration-250 shadow-3xs cursor-pointer group active:scale-95 min-h-[100px]`}
             >
-              {/* Actions Overlays */}
-              <div className="absolute top-3.5 right-3.5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-                <button
-                  id={`btn-edit-tile-${tile.id}`}
-                  onClick={(e) => startEdit(tile, e)}
-                  className="p-1.5 bg-white hover:bg-gray-100 text-[#141414]/75 rounded-lg shadow-2xs border border-[#141414]/10 cursor-pointer transition-colors"
-                  title="Bearbeiten"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                {!tile.isDefault && (
-                  <button
-                    id={`btn-delete-tile-${tile.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteTile(tile.id);
-                    }}
-                    className="p-1.5 bg-white hover:bg-red-50 text-red-500 rounded-lg shadow-2xs border border-[#141414]/10 cursor-pointer transition-colors"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+              {/* Service Info (Top Left Aligned) */}
+              <h3 className="text-xs font-bold text-[#141414] tracking-tight leading-snug font-sans text-left line-clamp-2">
+                {tile.name}
+              </h3>
 
-              {/* Service Icon Circle */}
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${colors.circleBg} ${colors.iconColor} transition-transform duration-200 group-hover:scale-105`}>
-                {getTileIcon(tile.name)}
-              </div>
-
-              {/* Service Info */}
-              <div className="flex flex-col items-center gap-1.5">
-                <h3 className="text-base font-bold text-[#141414] tracking-tight leading-snug font-sans">
-                  {tile.name}
-                </h3>
-                <span className="text-xs font-bold font-mono tracking-wide text-[#141414]/55 mt-0.5">
+              {/* Price per unit (Bottom Right Aligned) */}
+              <div className="text-right mt-auto pt-2">
+                <span className="text-[10px] font-black font-mono tracking-tight text-brand-accent1">
                   {tile.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} € / {tile.unit}
                 </span>
               </div>
