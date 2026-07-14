@@ -517,76 +517,6 @@ export default function App() {
 
         {/* Scrollable Sidebar Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          
-          {/* Project Selection / Actions */}
-          <div className="bg-gray-50 p-4 rounded-2xl border border-[#141414]/5 space-y-3">
-            <label className="block text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">
-              Projekt auswählen
-            </label>
-            {projects.length > 0 ? (
-              <div className="relative flex items-center bg-white border border-[#141414]/10 rounded-xl px-3 py-2 text-sm shadow-3xs cursor-pointer">
-                <FolderOpen className="w-4 h-4 text-brand-accent1 mr-2 flex-shrink-0" />
-                <select
-                  id="project-selector"
-                  value={activeProjectId || ''}
-                  onChange={(e) => {
-                    const pid = e.target.value;
-                    setActiveProjectId(pid);
-                    const p = projects.find(proj => proj.id === pid);
-                    setActiveRoomId(p?.rooms[0]?.id || null);
-                    setIsSidebarOpen(false);
-                  }}
-                  className="bg-transparent text-[#141414] font-bold pr-6 focus:outline-none cursor-pointer w-full appearance-none truncate"
-                >
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-white text-[#141414]">
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-[#141414]/45 absolute right-3 pointer-events-none" />
-              </div>
-            ) : (
-              <span className="text-xs text-[#141414]/40 block">Kein Projekt angelegt</span>
-            )}
-
-            {/* Project management buttons */}
-            {activeProject && (
-              <div className="flex items-center gap-2">
-                <button
-                  id="btn-edit-project"
-                  onClick={() => {
-                    setProjectToEdit(activeProject);
-                    setIsProjectModalOpen(true);
-                  }}
-                  className="flex-1 py-2 bg-white hover:bg-gray-50 border border-[#141414]/10 text-xs text-[#141414]/70 hover:text-brand-accent1 rounded-xl transition-all flex items-center justify-center gap-1 font-bold cursor-pointer"
-                  title="Projekt Details bearbeiten"
-                >
-                  <FileEdit className="w-3.5 h-3.5" /> Bearbeiten
-                </button>
-                <button
-                  id="btn-delete-project"
-                  onClick={() => handleDeleteProject(activeProject.id)}
-                  className="p-2 bg-white hover:bg-red-50 border border-[#141414]/10 text-red-500 rounded-xl transition-all cursor-pointer"
-                  title="Projekt komplett löschen"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            <button
-              id="btn-create-project-trigger"
-              onClick={() => {
-                setProjectToEdit(null);
-                setIsProjectModalOpen(true);
-              }}
-              className="w-full py-2 bg-brand-accent1 hover:bg-brand-accent1/90 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-3xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" /> Neues Projekt
-            </button>
-          </div>
-
           {activeProject && (
             <>
               {/* Room list inside sidebar */}
@@ -613,7 +543,75 @@ export default function App() {
               />
             </>
           )}
+        </div>
 
+        {/* Project Selection / Actions (Sticky/Pinned at bottom left) */}
+        <div className="p-4 border-t border-[#141414]/10 bg-gray-50/70 space-y-3">
+          <label className="block text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">
+            Projekt auswählen
+          </label>
+          {projects.length > 0 ? (
+            <div className="relative flex items-center bg-white border border-[#141414]/10 rounded-xl px-3 py-2 text-sm shadow-3xs cursor-pointer">
+              <FolderOpen className="w-4 h-4 text-brand-accent1 mr-2 flex-shrink-0" />
+              <select
+                id="project-selector"
+                value={activeProjectId || ''}
+                onChange={(e) => {
+                  const pid = e.target.value;
+                  setActiveProjectId(pid);
+                  const p = projects.find(proj => proj.id === pid);
+                  setActiveRoomId(p?.rooms[0]?.id || null);
+                  setIsSidebarOpen(false);
+                }}
+                className="bg-transparent text-[#141414] font-bold pr-6 focus:outline-none cursor-pointer w-full appearance-none truncate"
+              >
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-white text-[#141414]">
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#141414]/45 absolute right-3 pointer-events-none" />
+            </div>
+          ) : (
+            <span className="text-xs text-[#141414]/40 block">Kein Projekt angelegt</span>
+          )}
+
+          {/* Project management buttons */}
+          {activeProject && (
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-edit-project"
+                onClick={() => {
+                  setProjectToEdit(activeProject);
+                  setIsProjectModalOpen(true);
+                }}
+                className="flex-1 py-2 bg-white hover:bg-gray-50 border border-[#141414]/10 text-xs text-[#141414]/70 hover:text-brand-accent1 rounded-xl transition-all flex items-center justify-center gap-1 font-bold cursor-pointer"
+                title="Projekt Details bearbeiten"
+              >
+                <FileEdit className="w-3.5 h-3.5" /> Bearbeiten
+              </button>
+              <button
+                id="btn-delete-project"
+                onClick={() => handleDeleteProject(activeProject.id)}
+                className="p-2 bg-white hover:bg-red-50 border border-[#141414]/10 text-red-500 rounded-xl transition-all cursor-pointer"
+                title="Projekt komplett löschen"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <button
+            id="btn-create-project-trigger"
+            onClick={() => {
+              setProjectToEdit(null);
+              setIsProjectModalOpen(true);
+            }}
+            className="w-full py-2 bg-brand-accent1 hover:bg-brand-accent1/90 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-3xs cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" /> Neues Projekt
+          </button>
         </div>
       </aside>
 
@@ -639,37 +637,6 @@ export default function App() {
             </div>
           )}
         </header>
-
-        {/* --- PROJECT METADATA BAR (Header of Workspace) --- */}
-        {activeProject && (
-          <div className="bg-white border-b border-[#141414]/5 shadow-3xs px-6 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3" id="project-metadata-bar">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <span className="text-xs bg-gray-100 border border-[#141414]/5 text-[#141414]/70 px-3 py-1.5 rounded-xl font-medium">
-                Projekt-Nr: <code className="font-mono text-brand-accent1 font-bold">{activeProject.projectNumber}</code>
-              </span>
-              <span className="text-xs text-[#141414]/55 font-medium">
-                Datum: {new Date(activeProject.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-              </span>
-              {activeProject.description && (
-                <span className="text-xs text-[#141414]/60 max-w-sm truncate italic" title={activeProject.description}>
-                  – {activeProject.description}
-                </span>
-              )}
-            </div>
-
-            {/* Quick Helper to load sample data */}
-            <button
-              id="btn-load-sample"
-              onClick={() => {
-                handleLoadSampleProject();
-                setIsSidebarOpen(false);
-              }}
-              className="text-[11px] font-bold text-brand-accent1 hover:text-brand-accent1/90 flex items-center gap-1.5 bg-brand-accent1/10 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-            >
-              <Database className="w-3.5 h-3.5" /> Demo-Projekt laden (+ Spachteln, Schleifen, Vlies)
-            </button>
-          </div>
-        )}
 
         {/* --- MAIN WORKSPACE AREA --- */}
         {activeProject ? (

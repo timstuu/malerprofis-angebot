@@ -180,28 +180,14 @@ export const RoomList: React.FC<RoomListProps> = ({
                     <Home className="w-4 h-4" />
                   </span>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-[10px] font-bold font-mono ${isActive ? 'text-white/80' : 'text-[#141414]/40'}`}>
-                        #{idx + 1}
-                      </span>
-                      <h3 className="font-bold text-sm tracking-tight truncate font-sans">
-                        {room.name}
-                      </h3>
-                    </div>
-                    <span className={`text-[10px] font-medium block mt-0.5 ${isActive ? 'text-white/70' : 'text-[#141414]/50'}`}>
-                      {room.positions.length} Positionen
-                    </span>
+                    <h3 className="font-bold text-sm tracking-tight truncate font-sans">
+                      {room.name}
+                    </h3>
                   </div>
                 </div>
 
-                {/* Right side: total and actions */}
+                {/* Right side: actions only */}
                 <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <span className={`text-xs font-bold font-mono block ${isActive ? 'text-white' : 'text-[#141414]'}`}>
-                      {total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-                    </span>
-                  </div>
-
                   {/* Room action buttons (hidden on active room if not hovered, but visible on hover) */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
