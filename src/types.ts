@@ -10,6 +10,7 @@ export interface ServiceTile {
   price: number;
   color?: string; // Optional custom background color for the POS tile
   isDefault?: boolean;
+  category?: string; // Tab/Category association
 }
 
 export interface Position {

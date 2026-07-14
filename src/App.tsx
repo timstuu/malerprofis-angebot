@@ -140,7 +140,7 @@ export default function App() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   
-  const [serviceTiles, setServiceTiles] = useState<ServiceTile[]>([]);
+  const [serviceTiles, setServiceTiles] = useState<ServiceTile[]>(DEFAULT_SERVICE_TILES);
   const [exportSettings, setExportSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
   
   // Sidebar visibility for mobile / tablet portrait
@@ -160,7 +160,14 @@ export default function App() {
     // 1. Service Tiles
     const cachedTiles = localStorage.getItem('maler_service_tiles');
     if (cachedTiles) {
-      setServiceTiles(JSON.parse(cachedTiles));
+      const parsed = JSON.parse(cachedTiles) as ServiceTile[];
+      const hasCategories = parsed.every(t => t.category);
+      if (hasCategories && parsed.length > 0) {
+        setServiceTiles(parsed);
+      } else {
+        setServiceTiles(DEFAULT_SERVICE_TILES);
+        localStorage.setItem('maler_service_tiles', JSON.stringify(DEFAULT_SERVICE_TILES));
+      }
     } else {
       setServiceTiles(DEFAULT_SERVICE_TILES);
       localStorage.setItem('maler_service_tiles', JSON.stringify(DEFAULT_SERVICE_TILES));
@@ -663,7 +670,7 @@ export default function App() {
           <main className="flex-1 w-full p-4 lg:p-6 space-y-6" id="workspace-main">
             
             {/* 1. Service Tile Grid (Selection) */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
+            <div className="w-full">
               <ServiceTileGrid
                 tiles={serviceTiles}
                 onTileClick={(tile) => {
@@ -677,20 +684,6 @@ export default function App() {
                 onEditTile={handleEditCustomTile}
                 onDeleteTile={handleDeleteCustomTile}
               />
-
-              {/* Reset Catalog options */}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100 text-xs">
-                <span className="text-slate-400">
-                  Modus: {serviceTiles.length} Kacheln verfügbar
-                </span>
-                <button
-                  id="btn-reset-catalog"
-                  onClick={handleResetCatalogToDefault}
-                  className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <RefreshCw className="w-3 h-3" /> Fiktive Stammdaten wiederherstellen
-                </button>
-              </div>
             </div>
 
             {/* 2. Position Table (Measurements) */}
