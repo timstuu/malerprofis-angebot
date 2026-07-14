@@ -501,7 +501,7 @@ export default function App() {
       )}
 
       {/* --- LEFT SIDEBAR (Full height on lg) --- */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-[#141414]/10 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:w-80 ${
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[427px] bg-white border-r border-[#141414]/10 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:w-[427px] lg:max-w-none ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Sidebar Header: Logo & Close Button */}
@@ -533,13 +533,6 @@ export default function App() {
                 }}
                 onEditRoom={handleEditRoom}
                 onDeleteRoom={handleDeleteRoom}
-              />
-
-              {/* Export settings inside sidebar */}
-              <ExportSettingsPanel
-                project={activeProject}
-                settings={exportSettings}
-                onUpdateSettings={saveExportSettingsToStorage}
               />
             </>
           )}
@@ -679,6 +672,13 @@ export default function App() {
               onEditPosition={handleEditPositionQuantity}
               onDeletePosition={handleDeletePosition}
               allRooms={activeProject.rooms}
+            />
+
+            {/* 3. Export settings panel (Move here from sidebar) */}
+            <ExportSettingsPanel
+              project={activeProject}
+              settings={exportSettings}
+              onUpdateSettings={saveExportSettingsToStorage}
             />
 
           </main>
