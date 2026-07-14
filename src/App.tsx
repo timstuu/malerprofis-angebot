@@ -18,7 +18,8 @@ import {
   Database,
   ChevronDown,
   X,
-  Menu
+  Menu,
+  Upload
 } from 'lucide-react';
 
 import { Project, Room, Position, ServiceTile, ExportSettings } from './types';
@@ -30,12 +31,65 @@ import { PositionTable } from './components/PositionTable';
 import { ExportSettingsPanel } from './components/ExportSettingsPanel';
 import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 
+// --- DYNAMIC HASH COLOR GENERATOR FOR IMPORTED CATEGORIES ---
+const CATEGORY_COLORS = ['emerald', 'sky', 'amber', 'orange', 'slate'];
+const hashCategoryToColor = (category: string): string => {
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % CATEGORY_COLORS.length;
+  return CATEGORY_COLORS[index];
+};
+
+// --- STANDARDS-COMPLIANT CSV PARSER (HANDLES QUOTES & SEMICOLONS) ---
+const parseCSV = (text: string): string[][] => {
+  const lines: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        cell += '"';
+        i++; // skip next char
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ';' && !inQuotes) {
+      row.push(cell);
+      cell = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      row.push(cell);
+      lines.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += char;
+    }
+  }
+  if (cell || row.length > 0) {
+    row.push(cell);
+    lines.push(row);
+  }
+  return lines;
+};
+
 // --- SAMPLE INITIAL DATA FOR IMMACULATE UX ON FIRST LAUNCH ---
 const createSampleProject = (): Project => {
   return {
     id: 'sample-project-1',
-    name: 'EFH Müller - Renovierung',
-    projectNumber: 'PR-2026-042',
+    name: 'Müller',
+    street: 'Musterstraße 12',
+    zipCity: '70173 Stuttgart',
+    email: 'mueller.renovierung@gmail.com',
     date: '2026-07-09',
     description: 'Erdgeschoss und Flur Malerarbeiten, Spachteln Q3 & Vliestapezierung',
     createdAt: Date.now() - 86400000, // 1 day ago
@@ -145,7 +199,10 @@ export default function App() {
   
   // Sidebar visibility for mobile / tablet portrait
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
+  // Settings popover
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   // Modals & Popups
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
@@ -155,7 +212,20 @@ export default function App() {
   // Quick quantity entry keyboard input
   const [keypadValue, setKeypadValue] = useState('');
 
+  // Import Progress state
+  const [importProgress, setImportProgress] = useState<number | null>(null);
+  const [importStatusText, setImportStatusText] = useState<string>('');
+
   // --- INITIALIZATION (LOCAL STORAGE SYNC) ---
+  useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    }
+  }, []);
+
+
+  // --- LOCAL STORAGE SYNC ---
   useEffect(() => {
     // 1. Service Tiles
     const cachedTiles = localStorage.getItem('maler_service_tiles');
@@ -204,6 +274,7 @@ export default function App() {
     }
   }, []);
 
+
   // Sync state to localStorage on modification
   const saveProjectsToStorage = (updated: Project[]) => {
     setProjects(updated);
@@ -232,7 +303,14 @@ export default function App() {
   }, [selectedTileForInput, activeRoomId]);
 
   // --- PROJECT ACTIONS ---
-  const handleCreateOrUpdateProject = (data: { name: string; projectNumber: string; date: string; description: string }) => {
+  const handleCreateOrUpdateProject = (data: {
+    name: string;
+    street: string;
+    zipCity: string;
+    email: string;
+    date: string;
+    description: string;
+  }) => {
     if (projectToEdit) {
       // Update existing
       const updated = projects.map(p => {
@@ -240,7 +318,9 @@ export default function App() {
           return {
             ...p,
             name: data.name,
-            projectNumber: data.projectNumber,
+            street: data.street,
+            zipCity: data.zipCity,
+            email: data.email,
             date: data.date,
             description: data.description
           };
@@ -254,7 +334,9 @@ export default function App() {
       const newProj: Project = {
         id: `proj-${Date.now()}`,
         name: data.name,
-        projectNumber: data.projectNumber,
+        street: data.street,
+        zipCity: data.zipCity,
+        email: data.email,
         date: data.date,
         description: data.description,
         createdAt: Date.now(),
@@ -290,7 +372,6 @@ export default function App() {
     const sample = createSampleProject();
     // Generate a unique ID to prevent overlapping if they import multiple times
     sample.id = `sample-${Date.now()}`;
-    sample.projectNumber = `PR-2026-${String(Math.floor(100 + Math.random() * 900))}`;
     sample.name = `${sample.name} (${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })})`;
     
     const updated = [sample, ...projects];
@@ -496,6 +577,143 @@ export default function App() {
     }
   };
 
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      try {
+        const parsedLines = parseCSV(text);
+        if (parsedLines.length < 2) {
+          alert('Die CSV-Datei ist leer oder ungültig.');
+          return;
+        }
+
+        // Set initial progress state
+        setImportProgress(0);
+        setImportStatusText('Analysiere Spalten...');
+
+        setTimeout(() => {
+          // Find indices dynamically
+          const headers = parsedLines[0].map(h => h.trim().toLowerCase());
+          const keyIdx = headers.indexOf('key');
+          const matchcodeIdx = headers.indexOf('matchcode');
+          const kurztext1Idx = headers.indexOf('kurztext1');
+          const preisIdx = headers.indexOf('preis');
+          const mengeneinheitIdx = headers.indexOf('mengeneinheit');
+
+          const resolvedKeyIdx = keyIdx !== -1 ? keyIdx : 0;
+          const resolvedMatchcodeIdx = matchcodeIdx !== -1 ? matchcodeIdx : 1;
+          const resolvedKurztext1Idx = kurztext1Idx !== -1 ? kurztext1Idx : 2;
+          const resolvedPreisIdx = preisIdx !== -1 ? preisIdx : 13;
+          const resolvedMengeneinheitIdx = mengeneinheitIdx !== -1 ? mengeneinheitIdx : 14;
+
+          let currentCategory = 'Allgemein';
+          let currentSubcategory = '';
+          const newTiles: ServiceTile[] = [];
+          
+          const totalRows = parsedLines.length - 1;
+          let currentIndex = 1;
+          const chunkSize = 400; // process 400 lines at a time
+
+          const processNextChunk = () => {
+            const endLimit = Math.min(currentIndex + chunkSize, parsedLines.length);
+            
+            for (let i = currentIndex; i < endLimit; i++) {
+              const row = parsedLines[i];
+              if (row.length < 3) continue;
+
+              const key = row[resolvedKeyIdx]?.trim() || '';
+              const matchcode = row[resolvedMatchcodeIdx]?.trim() || '';
+              const kurztext1 = row[resolvedKurztext1Idx]?.trim() || '';
+
+              // 1. Check if Reiter
+              if (kurztext1.startsWith('==')) {
+                currentCategory = kurztext1
+                  .replace(/^==\s*/, '')
+                  .replace(/\s*==+$/, '')
+                  .replace(/=/g, '')
+                  .trim();
+                currentSubcategory = '';
+                continue;
+              }
+
+              // 2. Check if Unterreiter
+              if (kurztext1.startsWith('**')) {
+                currentSubcategory = kurztext1
+                  .replace(/^\*\*\s*/, '')
+                  .replace(/\s*\*\*+$/, '')
+                  .replace(/\*/g, '')
+                  .trim();
+                continue;
+              }
+
+              // 3. Exclude if matchcode AND kurztext1 are both empty
+              if (!matchcode && !kurztext1) {
+                continue;
+              }
+
+              // 4. Normal Position
+              const preisStr = row[resolvedPreisIdx]?.trim() || '0';
+              const cleanPreisStr = preisStr.replace(/\./g, '').replace(',', '.');
+              const price = parseFloat(cleanPreisStr) || 0;
+
+              const unit = row[resolvedMengeneinheitIdx]?.trim() || 'qm';
+
+              newTiles.push({
+                id: key || `tile-imported-${i}`,
+                name: kurztext1,
+                unit: unit,
+                price: price,
+                color: hashCategoryToColor(currentCategory),
+                category: currentCategory,
+                subcategory: currentSubcategory || undefined,
+                key: key
+              });
+            }
+
+            currentIndex = endLimit;
+            const progress = Math.min(Math.round(((currentIndex - 1) / totalRows) * 100), 99);
+            setImportProgress(progress);
+            setImportStatusText(`Verarbeite Position ${currentIndex - 1} von ${totalRows}...`);
+
+            if (currentIndex < parsedLines.length) {
+              // Schedule next chunk
+              setTimeout(processNextChunk, 20); // 20ms pause for UI render
+            } else {
+              // Finished processing
+              setImportProgress(100);
+              setImportStatusText('Katalog wird finalisiert...');
+              
+              setTimeout(() => {
+                if (newTiles.length === 0) {
+                  alert('Keine gültigen Positionen in der CSV-Datei gefunden.');
+                  setImportProgress(null);
+                  return;
+                }
+                saveTilesToStorage(newTiles);
+                setImportProgress(null);
+                alert(`Erfolgreich ${newTiles.length} Positionen und deren Reiter importiert!`);
+              }, 300);
+            }
+          };
+
+          // Start the chunked execution
+          processNextChunk();
+        }, 100);
+      } catch (err) {
+        console.error(err);
+        alert('Fehler beim Parsen der CSV-Datei.');
+        setImportProgress(null);
+      }
+    };
+    reader.readAsText(file, 'ISO-8859-1');
+  };
+
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col lg:flex-row lg:h-screen lg:overflow-hidden font-sans text-[#141414] antialiased" id="main-app-container">
       
@@ -511,15 +729,83 @@ export default function App() {
       <aside className={`fixed inset-y-0 left-0 z-50 w-[85vw] max-w-[427px] bg-white border-r border-[#141414]/10 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen lg:w-[427px] lg:max-w-none ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        {/* Sidebar Header: Logo & Close Button */}
+        {/* Sidebar Header: Logo, Settings & Close Button */}
         <div className="p-4 border-b border-[#141414]/5 flex items-center justify-between">
           <img src="/icons/logo.png" className="h-10 w-auto" alt="Malerprofis Uderstadt Logo" referrerPolicy="no-referrer" />
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 hover:bg-gray-100 rounded-lg text-[#141414]/40 hover:text-[#141414]/80 transition-all cursor-pointer lg:hidden"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Settings Icon with Popover */}
+            <div className="relative">
+              <button
+                id="btn-settings"
+                onClick={() => setIsSettingsOpen(prev => !prev)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-[#141414]/40 hover:text-[#141414]/70 transition-all cursor-pointer"
+                title="Einstellungen"
+              >
+                <Settings2 className="w-4 h-4" />
+              </button>
+              {isSettingsOpen && (
+                <>
+                  {/* Backdrop to close on outside click */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsSettingsOpen(false)}
+                  />
+                  {/* Popover dropdown */}
+                  <div className="absolute right-0 top-full mt-2 z-50 w-52 bg-white border border-[#141414]/10 rounded-xl shadow-lg overflow-hidden animate-fade-in">
+                  <div className="divide-y divide-[#141414]/5">
+                    {/* Version row */}
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Settings2 className="w-4 h-4 text-[#141414]/50" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">App-Version</p>
+                        <p className="text-sm font-bold text-[#141414]">v1.1.1</p>
+                      </div>
+                    </div>
+
+                    {/* Import CSV row */}
+                    <div className="px-4 py-3">
+                      <label 
+                        htmlFor="csv-file-input"
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gray-50 hover:bg-gray-100 text-[#141414]/70 hover:text-[#141414] text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-[#141414]/50" />
+                        Katalog importieren (.csv)
+                      </label>
+                      <input
+                        id="csv-file-input"
+                        type="file"
+                        accept=".csv"
+                        onChange={handleImportCSV}
+                        className="hidden"
+                      />
+                    </div>
+
+                    {/* Reload app row */}
+                    <div className="px-4 py-3">
+                      <button
+                        id="btn-reload-app"
+                        onClick={() => window.location.reload()}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gray-50 hover:bg-gray-100 text-[#141414]/70 hover:text-[#141414] text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        App neu laden
+                      </button>
+                    </div>
+                  </div>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 hover:bg-gray-100 rounded-lg text-[#141414]/40 hover:text-[#141414]/80 transition-all cursor-pointer lg:hidden"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Sidebar Content */}
@@ -802,6 +1088,41 @@ export default function App() {
             {/* Quick manual helper fallback */}
             <div className="px-6 pb-6 text-center bg-white text-[10px] text-[#141414]/40 font-mono">
               Einzelpreis: {selectedTileForInput.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} € / {selectedTileForInput.unit}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL 3: FULL SCREEN IMPORT PROGRESS OVERLAY --- */}
+      {importProgress !== null && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 bg-[#141414]/65 backdrop-blur-md animate-fade-in" id="import-progress-modal">
+          <div className="bg-white w-full max-w-sm rounded-3xl border border-[#141414]/5 shadow-2xl p-6 flex flex-col items-center text-center animate-slide-up">
+            
+            {/* Animated Icon / Spinner */}
+            <div className="w-16 h-16 bg-brand-accent1/10 rounded-full flex items-center justify-center mb-5 animate-pulse">
+              <RefreshCw className="w-8 h-8 text-brand-accent1 animate-spin" style={{ animationDuration: '2s' }} />
+            </div>
+
+            <h3 className="font-extrabold text-[#141414] text-lg leading-tight font-sans">
+              Katalog wird geladen
+            </h3>
+            <p className="text-xs text-[#141414]/60 mt-1 font-sans">
+              Bitte lass das Browserfenster geöffnet.
+            </p>
+
+            {/* Progress Bar Container */}
+            <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden mt-6 mb-3 relative border border-gray-100">
+              <div 
+                className="bg-brand-accent1 h-full rounded-full transition-all duration-150 ease-out"
+                style={{ width: `${importProgress}%` }}
+              />
+            </div>
+
+            {/* Percentage & Status Text */}
+            <div className="flex justify-between items-center w-full text-xs font-bold text-[#141414] mb-2 px-1 font-sans">
+              <span className="text-[#141414]/50 truncate max-w-[200px]">{importStatusText}</span>
+              <span className="font-mono text-brand-accent1">{importProgress}%</span>
             </div>
 
           </div>

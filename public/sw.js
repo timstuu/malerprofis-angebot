@@ -1,4 +1,4 @@
-const CACHE_NAME = 'malerprofis-cache-v1.0.2';
+const CACHE_NAME = 'malerprofis-cache-v1.1.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -28,6 +28,13 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+});
+
+// Allow the app to trigger skipWaiting on the waiting SW
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

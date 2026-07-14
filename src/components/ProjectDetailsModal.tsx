@@ -4,13 +4,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, User, FileDigit, AlignLeft } from 'lucide-react';
+import { X, Calendar, User, Home, MapPin, Mail, AlignLeft } from 'lucide-react';
 import { Project } from '../types';
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (projectData: { name: string; projectNumber: string; date: string; description: string }) => void;
+  onSave: (projectData: {
+    name: string;
+    street: string;
+    zipCity: string;
+    email: string;
+    date: string;
+    description: string;
+  }) => void;
   project?: Project | null; // If provided, we are editing
 }
 
@@ -21,7 +28,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   project,
 }) => {
   const [name, setName] = useState('');
-  const [projectNumber, setProjectNumber] = useState('');
+  const [street, setStreet] = useState('');
+  const [zipCity, setZipCity] = useState('');
+  const [email, setEmail] = useState('');
   const [date, setDate] = useState('');
   const [description, setDescription] = useState('');
 
@@ -29,13 +38,17 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   useEffect(() => {
     if (project) {
       setName(project.name);
-      setProjectNumber(project.projectNumber);
+      setStreet(project.street || '');
+      setZipCity(project.zipCity || '');
+      setEmail(project.email || '');
       setDate(project.date);
       setDescription(project.description);
     } else {
       // Defaults for new project
       setName('');
-      setProjectNumber(`PR-${new Date().getFullYear()}-${String(Math.floor(100 + Math.random() * 900))}`);
+      setStreet('');
+      setZipCity('');
+      setEmail('');
       setDate(new Date().toISOString().split('T')[0]);
       setDescription('');
     }
@@ -48,7 +61,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     if (!name.trim()) return;
     onSave({
       name: name.trim(),
-      projectNumber: projectNumber.trim(),
+      street: street.trim(),
+      zipCity: zipCity.trim(),
+      email: email.trim(),
       date,
       description: description.trim(),
     });
@@ -74,10 +89,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 flex-1 space-y-5">
-          {/* Customer / Project Name */}
+          {/* Customer Name */}
           <div>
             <label className="block text-[11px] font-bold text-[#141414]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-sans">
-              <User className="w-3.5 h-3.5 text-brand-accent1" /> Kundenname / Projektbezeichnung
+              <User className="w-3.5 h-3.5 text-brand-accent1" /> Name
             </label>
             <input
               id="input-project-name"
@@ -85,28 +100,62 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="z. B. Familie Müller - EFH Neubau"
+              placeholder="z. B. Max Müller"
+              className="w-full p-3 bg-gray-100 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent1/20 transition-all font-sans"
+            />
+          </div>
+
+          {/* Street */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#141414]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-sans">
+              <Home className="w-3.5 h-3.5 text-brand-accent1" /> Straße
+            </label>
+            <input
+              id="input-project-street"
+              type="text"
+              required
+              value={street}
+              onChange={(e) => setStreet(e.target.value)}
+              placeholder="z. B. Musterstraße 12"
               className="w-full p-3 bg-gray-100 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent1/20 transition-all font-sans"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Project Number */}
+            {/* ZIP / City */}
             <div>
               <label className="block text-[11px] font-bold text-[#141414]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-sans">
-                <FileDigit className="w-3.5 h-3.5 text-brand-accent1" /> Projektnummer
+                <MapPin className="w-3.5 h-3.5 text-brand-accent1" /> PLZ / Ort
               </label>
               <input
-                id="input-project-number"
+                id="input-project-zipcity"
                 type="text"
                 required
-                value={projectNumber}
-                onChange={(e) => setProjectNumber(e.target.value)}
-                placeholder="z. B. PR-2026-004"
-                className="w-full p-3 bg-gray-100 rounded-xl border-none text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-accent1/20 transition-all"
+                value={zipCity}
+                onChange={(e) => setZipCity(e.target.value)}
+                placeholder="z. B. 12345 Musterstadt"
+                className="w-full p-3 bg-gray-100 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent1/20 transition-all font-sans"
               />
             </div>
 
+            {/* Email */}
+            <div>
+              <label className="block text-[11px] font-bold text-[#141414]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-sans">
+                <Mail className="w-3.5 h-3.5 text-brand-accent1" /> E-Mail
+              </label>
+              <input
+                id="input-project-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="z. B. max.mueller@example.com"
+                className="w-full p-3 bg-gray-100 rounded-xl border-none text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent1/20 transition-all font-sans"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             {/* Date */}
             <div>
               <label className="block text-[11px] font-bold text-[#141414]/60 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-sans">

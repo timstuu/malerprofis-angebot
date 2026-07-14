@@ -31,14 +31,21 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
     const csvContent = generateHandicraftCSV(project, settings);
     
     // Build standard filename based on template
-    const cleanProjectName = project.name.replace(/[^a-zA-Z0-9]/g, '_');
-    const cleanProjNum = project.projectNumber.replace(/[^a-zA-Z0-9]/g, '_');
-    const dateStr = project.date.replace(/[^a-zA-Z0-9]/g, '-');
-    
+    const nameParts = project.name.trim().split(/\s+/);
+    const lastName = nameParts[nameParts.length - 1] || 'Kunde';
+    const cleanLastName = lastName.replace(/[^a-zA-Z0-9]/g, '');
+    const year = project.date ? project.date.split('-')[0] : new Date().getFullYear().toString();
+    const cleanStreet = project.street
+      ? project.street.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_')
+      : 'Strasse';
+      
     let filename = settings.filenameTemplate
-      .replace('{projectNumber}', cleanProjNum || 'PRJ')
-      .replace('{projectName}', cleanProjectName || 'PROJEKT')
-      .replace('{date}', dateStr);
+      .replace('{projectNumber}', '000')
+      .replace('{projectName}', cleanLastName)
+      .replace('{lastName}', cleanLastName)
+      .replace('{year}', year)
+      .replace('{date}', year)
+      .replace('{street}', cleanStreet);
       
     if (!filename.endsWith('.csv')) {
       filename += '.csv';

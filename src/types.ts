@@ -11,6 +11,8 @@ export interface ServiceTile {
   color?: string; // Optional custom background color for the POS tile
   isDefault?: boolean;
   category?: string; // Tab/Category association
+  subcategory?: string; // Sub-tab/Subcategory association
+  key?: string; // Original key from CSV
 }
 
 export interface Position {
@@ -34,7 +36,9 @@ export interface Room {
 export interface Project {
   id: string;
   name: string;
-  projectNumber: string;
+  street: string;
+  zipCity: string;
+  email: string;
   date: string;
   description: string;
   rooms: Room[];

@@ -163,5 +163,5 @@ export const DEFAULT_EXPORT_SETTINGS: ExportSettings = {
   delimiter: ';',
   decimalSeparator: ',',
   includeBOM: true,
-  filenameTemplate: 'HANDICRAFT_{projectNumber}_{projectName}',
+  filenameTemplate: '{lastName}000-{year}-{street}',
 };
