@@ -165,59 +165,64 @@ export const RoomList: React.FC<RoomListProps> = ({
             }
 
             return (
-              <div
-                key={room.id}
-                id={`room-item-${room.id}`}
-                onClick={() => onSelectRoom(room.id)}
-                className={`w-full text-left p-3.5 transition-all cursor-pointer flex items-center justify-between group ${
-                  isActive
-                    ? 'bg-brand-accent1 text-white'
-                    : 'bg-white hover:bg-gray-50 text-[#141414]'
-                }`}
-              >
-                <div className="flex items-center gap-3 pr-2 min-w-0">
-                  <span className={`p-2 rounded-xl flex-shrink-0 ${isActive ? 'bg-white/15 text-white' : 'bg-gray-100 text-brand-accent1 shadow-2xs'}`}>
-                    <Home className="w-4 h-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm tracking-tight truncate font-sans">
-                      {room.name}
-                    </h3>
+              <React.Fragment key={room.id}>
+                {/* Row 1: The Room Item */}
+                <div
+                  id={`room-item-${room.id}`}
+                  onClick={() => onSelectRoom(room.id)}
+                  className={`w-full text-left p-3.5 transition-all cursor-pointer flex items-center justify-between group ${
+                    isActive
+                      ? 'bg-brand-accent1 text-white'
+                      : 'bg-white hover:bg-gray-50 text-[#141414]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 pr-2 min-w-0">
+                    <span className={`p-2 rounded-xl flex-shrink-0 ${isActive ? 'bg-white/15 text-white' : 'bg-gray-100 text-brand-accent1 shadow-2xs'}`}>
+                      <Home className="w-4 h-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm tracking-tight truncate font-sans">
+                        {room.name}
+                      </h3>
+                    </div>
                   </div>
+
+                  {/* Room-Sum on the right */}
+                  <span className={`font-mono text-xs font-bold ${isActive ? 'text-white/95' : 'text-brand-accent1'}`}>
+                    {total.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
+                  </span>
                 </div>
 
-                {/* Right side: actions only */}
-                <div className="flex items-center gap-3">
-                  {/* Room action buttons (hidden on active room if not hovered, but visible on hover) */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Row 2: Selected Room Actions (Edit & Delete side-by-side) */}
+                {isActive && (
+                  <div className="flex divide-x divide-[#141414]/5 text-xs text-[#141414]/70 bg-gray-50/50">
                     <button
-                      id={`btn-edit-room-trigger-${room.id}`}
-                      onClick={(e) => startEditing(room, e)}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        isActive ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-white text-[#141414]/60 hover:text-[#141414] border border-[#141414]/10'
-                      }`}
-                      title="Umbenennen"
+                      id={`btn-edit-room-${room.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(room, e);
+                      }}
+                      className="flex-1 py-2.5 hover:bg-gray-100 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
+                      title="Raum umbenennen"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-3.5 h-3.5 text-brand-accent1" /> Bearbeiten
                     </button>
                     <button
-                      id={`btn-delete-room-trigger-${room.id}`}
+                      id={`btn-delete-room-${room.id}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm(`Möchtest du den Raum "${room.name}" und alle seine Positionen wirklich löschen?`)) {
                           onDeleteRoom(room.id);
                         }
                       }}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        isActive ? 'bg-white/20 text-white hover:bg-red-200' : 'bg-white text-red-500 hover:text-red-700 border border-[#141414]/10'
-                      }`}
-                      title="Löschen"
+                      className="flex-1 py-2.5 hover:bg-red-50 text-red-500 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
+                      title="Raum löschen"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" /> Löschen
                     </button>
                   </div>
-                </div>
-              </div>
+                )}
+              </React.Fragment>
             );
           })
         )}

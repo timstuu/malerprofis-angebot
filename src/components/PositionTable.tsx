@@ -60,15 +60,6 @@ export const PositionTable: React.FC<PositionTableProps> = ({
               {activeRoom ? `Aktueller Raum: "${activeRoom.name}"` : 'Wähle einen Raum aus, um Positionen zu sehen'}
             </p>
           </div>
-
-          {activeRoom && (
-            <div className="bg-brand-accent1/10 px-4 py-2 rounded-2xl border-none text-right">
-              <span className="text-[10px] font-bold text-brand-accent1 block uppercase tracking-wider font-sans">Raum-Summe</span>
-              <span className="text-base font-extrabold text-brand-accent1 font-mono">
-                {calculateRoomTotal(activeRoom).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-              </span>
-            </div>
-          )}
         </div>
 
         {!activeRoom ? (
@@ -201,6 +192,19 @@ export const PositionTable: React.FC<PositionTableProps> = ({
                   );
                 })}
               </tbody>
+              {activeRoom && activeRoom.positions.length > 0 && (
+                <tfoot>
+                  <tr className="border-t border-[#141414]/10 font-bold bg-brand-accent1/5 font-sans">
+                    <td colSpan={5} className="py-4 px-3 text-right text-xs text-[#141414]/75 uppercase tracking-wider">
+                      Raum-Summe:
+                    </td>
+                    <td className="py-4 px-3 text-right font-mono text-sm text-brand-accent1 font-black">
+                      {calculateRoomTotal(activeRoom).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         )}
