@@ -534,6 +534,12 @@ export default function App() {
                 onEditRoom={handleEditRoom}
                 onDeleteRoom={handleDeleteRoom}
               />
+
+              {/* Export Settings & Project Total Statistics Panel inside sidebar */}
+              <ExportSettingsPanel
+                project={activeProject}
+                settings={exportSettings}
+              />
             </>
           )}
         </div>
@@ -674,13 +680,6 @@ export default function App() {
               allRooms={activeProject.rooms}
             />
 
-            {/* 3. Export settings panel (Move here from sidebar) */}
-            <ExportSettingsPanel
-              project={activeProject}
-              settings={exportSettings}
-              onUpdateSettings={saveExportSettingsToStorage}
-            />
-
           </main>
         ) : (
           /* --- EMPTY STATE ONBOARDING --- */
@@ -718,14 +717,6 @@ export default function App() {
             </div>
           </main>
         )}
-
-        {/* --- FOOTER REGISTRY --- */}
-        <footer className="bg-slate-900 border-t border-slate-800 text-slate-500 text-xs py-4 text-center mt-auto" id="app-footer-brand">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span>&copy; 2026 Maler-Aufmaß-Profi MVP. Lokaler Offline-Modus aktiv.</span>
-            <span className="font-semibold text-slate-400">Kompatibel mit HANDICRAFT "Sonderfunktion 602"</span>
-          </div>
-        </footer>
 
       </div>
 
