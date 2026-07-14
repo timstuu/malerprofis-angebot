@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, Home, Edit3, Trash2, Check, X, FolderKanban } from 'lucide-react';
+import { Plus, Home, Edit3, Trash2, Check, X } from 'lucide-react';
 import { Room } from '../types';
 
 interface RoomListProps {
@@ -55,14 +55,14 @@ export const RoomList: React.FC<RoomListProps> = ({
   };
 
   return (
-    <div className="w-full bg-white p-6 rounded-3xl border border-[#141414]/5 shadow-xs" id="room-list-container">
-      <div className="flex justify-between items-center mb-5">
+    <div className="w-full flex flex-col space-y-4" id="room-list-container">
+      {/* Header section (container-less) */}
+      <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-lg font-bold text-[#141414] flex items-center gap-2 font-sans tracking-tight">
-            <FolderKanban className="w-5 h-5 text-brand-accent1" />
+          <h2 className="text-lg font-bold text-[#141414] font-sans tracking-tight">
             Abschnitte / Räume
           </h2>
-          <p className="text-xs text-[#141414]/60">
+          <p className="text-xs text-[#141414]/60 mt-0.5">
             Wähle den aktiven Raum für das Aufmaß
           </p>
         </div>
@@ -70,7 +70,7 @@ export const RoomList: React.FC<RoomListProps> = ({
           <button
             id="btn-add-room-toggle"
             onClick={() => setIsAdding(true)}
-            className="p-3.5 bg-brand-accent1/10 hover:bg-brand-accent1/15 text-brand-accent1 rounded-2xl transition-all cursor-pointer"
+            className="p-3 bg-brand-accent1/10 hover:bg-brand-accent1/15 text-brand-accent1 rounded-xl transition-all cursor-pointer"
             title="Raum hinzufügen"
           >
             <Plus className="w-4 h-4" />
@@ -80,7 +80,7 @@ export const RoomList: React.FC<RoomListProps> = ({
 
       {/* Add Room Form */}
       {isAdding && (
-        <form onSubmit={handleAddSubmit} className="mb-5 bg-gray-50 p-4 rounded-2xl border border-[#141414]/5 flex gap-2.5 animate-fade-in" id="add-room-form">
+        <form onSubmit={handleAddSubmit} className="bg-gray-50 p-4 rounded-2xl border border-[#141414]/5 flex gap-2.5 animate-fade-in" id="add-room-form">
           <input
             id="input-new-room-name"
             type="text"
@@ -109,10 +109,10 @@ export const RoomList: React.FC<RoomListProps> = ({
         </form>
       )}
 
-      {/* Room List Grid */}
-      <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+      {/* Unified Room List Container without spacing */}
+      <div className="bg-white border border-[#141414]/10 rounded-2xl overflow-hidden divide-y divide-[#141414]/5 max-h-[340px] overflow-y-auto pr-0 shadow-3xs">
         {rooms.length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-[#141414]/10 rounded-2xl">
+          <div className="text-center py-8 border border-dashed border-[#141414]/10 rounded-2xl m-4">
             <p className="text-xs text-[#141414]/60">Keine Räume angelegt.</p>
             <button
               id="btn-create-first-room"
@@ -134,7 +134,7 @@ export const RoomList: React.FC<RoomListProps> = ({
                   key={room.id}
                   id={`form-edit-room-${room.id}`}
                   onSubmit={(e) => handleEditSubmit(room.id, e)}
-                  className="flex items-center gap-2 p-2.5 bg-gray-50 border border-[#141414]/5 rounded-2xl"
+                  className="flex items-center gap-2 p-2.5 bg-gray-50 border-b border-[#141414]/5"
                 >
                   <input
                     id={`input-edit-room-${room.id}`}
@@ -169,10 +169,10 @@ export const RoomList: React.FC<RoomListProps> = ({
                 key={room.id}
                 id={`room-item-${room.id}`}
                 onClick={() => onSelectRoom(room.id)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${
+                className={`w-full text-left p-3.5 transition-all cursor-pointer flex items-center justify-between group ${
                   isActive
-                    ? 'bg-brand-accent1 border-brand-accent1 text-white shadow-sm'
-                    : 'bg-white hover:bg-gray-50 border-[#141414]/5 text-[#141414]'
+                    ? 'bg-brand-accent1 text-white'
+                    : 'bg-white hover:bg-gray-50 text-[#141414]'
                 }`}
               >
                 <div className="flex items-center gap-3 pr-2 min-w-0">
