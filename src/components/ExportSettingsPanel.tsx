@@ -98,7 +98,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
         {/* Grand Total Row */}
         <div className="p-3.5 bg-brand-accent1/5 flex items-center justify-between">
           <span className="text-xs text-[#141414]/70 font-bold">Gesamtsumme</span>
-          <span className="text-base font-black text-[#141414]">
+          <span className="text-base font-black text-brand-accent1">
             {totalSum.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
           </span>
         </div>

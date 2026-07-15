@@ -1,7 +1,7 @@
 {
-  "name": "Malerprofis Uderstadt",
+  "name": "Malerprofis - Digitale Angebote",
   "short_name": "Malerprofis",
-  "description": "Digitale Baustellenerfassung und Aufmaß-Erstellung für Malerprofis Uderstadt",
+  "description": "Digitale Angebote und Aufmaßerfassung für die Malerprofis",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fefefe",

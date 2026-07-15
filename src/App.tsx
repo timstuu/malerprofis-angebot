@@ -577,6 +577,69 @@ export default function App() {
     }
   };
 
+  const extractUnitAndCleanTitle = (title: string): { unit: string; cleanTitle: string } => {
+    const workingTitle = title.trim();
+    
+    const unitPatterns = [
+      /^lfd\.m\./i,
+      /^lfd\.m/i,
+      /^lfd\s+m/i,
+      /^pauschal/i,
+      /^pausch\./i,
+      /^pausch/i,
+      /^gebinde/i,
+      /^karton/i,
+      /^liter/i,
+      /^rolle/i,
+      /^eimer/i,
+      /^stck\./i,
+      /^stck/i,
+      /^stk\./i,
+      /^stk/i,
+      /^std\./i,
+      /^std/i,
+      /^psch\./i,
+      /^psch/i,
+      /^geb\./i,
+      /^geb/i,
+      /^ktn\./i,
+      /^ktn/i,
+      /^krt/i,
+      /^ltr\./i,
+      /^ltr/i,
+      /^rln/i,
+      /^rle/i,
+      /^m²/i,
+      /^m2/i,
+      /^qm/i,
+      /^lfm/i,
+      /^kg/i,
+      /^[mstlght](?=[\s\.\-\/]|$)/i
+    ];
+
+    for (const pattern of unitPatterns) {
+      const match = workingTitle.match(pattern);
+      if (match) {
+        const matchedText = match[0];
+        const matchLength = matchedText.length;
+        
+        let rest = workingTitle.substring(matchLength);
+        rest = rest.replace(/^[\s\.\-\/]+/, '').trim();
+        
+        if (rest.length === 0) {
+          continue;
+        }
+
+        const cleanTitle = rest.charAt(0).toUpperCase() + rest.slice(1);
+        const unit = matchedText.trim();
+
+        return { unit, cleanTitle };
+      }
+    }
+
+    return { unit: '', cleanTitle: title };
+  };
+
   const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -662,11 +725,18 @@ export default function App() {
               const cleanPreisStr = preisStr.replace(/\./g, '').replace(',', '.');
               const price = parseFloat(cleanPreisStr) || 0;
 
-              const unit = row[resolvedMengeneinheitIdx]?.trim() || 'qm';
+              let unit = row[resolvedMengeneinheitIdx]?.trim() || '';
+              let name = kurztext1;
+
+              if (!unit) {
+                const extracted = extractUnitAndCleanTitle(kurztext1);
+                unit = extracted.unit;
+                name = extracted.cleanTitle;
+              }
 
               newTiles.push({
                 id: key || `tile-imported-${i}`,
-                name: kurztext1,
+                name: name,
                 unit: unit,
                 price: price,
                 color: hashCategoryToColor(currentCategory),
@@ -760,7 +830,7 @@ export default function App() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">App-Version</p>
-                        <p className="text-sm font-bold text-[#141414]">v1.1.1</p>
+                        <p className="text-sm font-bold text-[#141414]">v1.1.3</p>
                       </div>
                     </div>
 
@@ -987,7 +1057,7 @@ export default function App() {
             <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 border border-indigo-100 shadow-md">
               <Paintbrush className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight font-display">Maler-Aufmaß-Profi MVP</h2>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight font-display">Malerprofis - Digitale Angebote</h2>
             <p className="text-sm text-slate-500 mt-2 leading-relaxed">
               Es ist aktuell kein Projekt geladen. Lege ein neues Projekt für deinen Kunden an, um mit der schnellen Kachel-Aufmaßerfassung auf der Baustelle zu starten.
             </p>
@@ -1087,7 +1157,7 @@ export default function App() {
 
             {/* Quick manual helper fallback */}
             <div className="px-6 pb-6 text-center bg-white text-[10px] text-[#141414]/40 font-mono">
-              Einzelpreis: {selectedTileForInput.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} € / {selectedTileForInput.unit}
+              Einzelpreis: <span className="text-brand-accent1 font-bold">{selectedTileForInput.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</span>{selectedTileForInput.unit ? ` / ${selectedTileForInput.unit}` : ''}
             </div>
 
           </div>

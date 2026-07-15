@@ -133,12 +133,12 @@ export const PositionTable: React.FC<PositionTableProps> = ({
                       </td>
 
                       {/* Single Price */}
-                      <td className="py-3.5 px-3 text-right font-mono text-xs text-[#141414]/50">
+                      <td className="py-3.5 px-3 text-right font-mono text-xs text-brand-accent1/70">
                         {pos.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                       </td>
 
                       {/* Total Price */}
-                      <td className="py-3.5 px-3 text-right font-mono font-bold text-[#141414]">
+                      <td className="py-3.5 px-3 text-right font-mono font-bold text-brand-accent1">
                         {pos.totalPrice.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                       </td>
 

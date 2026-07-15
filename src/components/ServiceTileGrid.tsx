@@ -75,7 +75,7 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`cursor-pointer transition-colors flex-shrink-0 ${
+                className={`cursor-pointer transition-colors flex-shrink-0 uppercase ${
                   isActive
                     ? 'text-[#141414] font-black'
                     : 'text-[#141414]/40 hover:text-[#141414]/75 font-semibold'
@@ -121,7 +121,7 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
                     {/* Price per unit (Bottom Right Aligned) */}
                     <div className="text-right mt-auto pt-2">
                       <span className="text-[10px] font-black font-mono tracking-tight text-brand-accent1">
-                        {tile.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} € / {tile.unit}
+                        {tile.price.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €{tile.unit ? ` / ${tile.unit}` : ''}
                       </span>
                     </div>
                   </div>
