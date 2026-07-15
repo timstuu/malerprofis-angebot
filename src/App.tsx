@@ -22,6 +22,8 @@ import {
   Upload
 } from 'lucide-react';
 
+import * as XLSX from 'xlsx';
+
 import { Project, Room, Position, ServiceTile, ExportSettings } from './types';
 import { DEFAULT_SERVICE_TILES, DEFAULT_EXPORT_SETTINGS } from './constants';
 import { NumericKeypad } from './components/NumericKeypad';
@@ -42,45 +44,7 @@ const hashCategoryToColor = (category: string): string => {
   return CATEGORY_COLORS[index];
 };
 
-// --- STANDARDS-COMPLIANT CSV PARSER (HANDLES QUOTES & SEMICOLONS) ---
-const parseCSV = (text: string): string[][] => {
-  const lines: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
-    
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        cell += '"';
-        i++; // skip next char
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ';' && !inQuotes) {
-      row.push(cell);
-      cell = '';
-    } else if ((char === '\r' || char === '\n') && !inQuotes) {
-      if (char === '\r' && nextChar === '\n') {
-        i++;
-      }
-      row.push(cell);
-      lines.push(row);
-      row = [];
-      cell = '';
-    } else {
-      cell += char;
-    }
-  }
-  if (cell || row.length > 0) {
-    row.push(cell);
-    lines.push(row);
-  }
-  return lines;
-};
+
 
 // --- SAMPLE INITIAL DATA FOR IMMACULATE UX ON FIRST LAUNCH ---
 const createSampleProject = (): Project => {
@@ -437,6 +401,20 @@ export default function App() {
     }
   };
 
+  const handleReorderRooms = (newRooms: Room[]) => {
+    if (!activeProject) return;
+    const updated = projects.map(p => {
+      if (p.id === activeProject.id) {
+        return {
+          ...p,
+          rooms: newRooms
+        };
+      }
+      return p;
+    });
+    saveProjectsToStorage(updated);
+  };
+
   // --- POSITION ACTIONS (MEASUREMENTS) ---
   const handleAddPositionFromTile = () => {
     if (!activeProject || !selectedTileForInput) return;
@@ -460,6 +438,7 @@ export default function App() {
       id: `pos-${Date.now()}`,
       tileId: selectedTileForInput.id,
       name: selectedTileForInput.name,
+      nameS: selectedTileForInput.nameS,
       quantity: parsedQty,
       unit: selectedTileForInput.unit,
       price: selectedTileForInput.price,
@@ -640,19 +619,47 @@ export default function App() {
     return { unit: '', cleanTitle: title };
   };
 
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+const parseImportPrice = (str: string): number => {
+  const trimmed = str.trim();
+  if (!trimmed) return 0;
+  if (trimmed.includes(',') && trimmed.includes('.')) {
+    if (trimmed.indexOf('.') < trimmed.indexOf(',')) {
+      return parseFloat(trimmed.replace(/\./g, '').replace(',', '.')) || 0;
+    } else {
+      return parseFloat(trimmed.replace(/,/g, '')) || 0;
+    }
+  }
+  if (trimmed.includes(',')) {
+    return parseFloat(trimmed.replace(',', '.')) || 0;
+  }
+  return parseFloat(trimmed) || 0;
+};
+
+  const handleImportXlsx = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const text = e.target?.result as string;
-      if (!text) return;
+      const data = e.target?.result;
+      if (!data) return;
 
       try {
-        const parsedLines = parseCSV(text);
+        const arr = new Uint8Array(data as ArrayBuffer);
+        const workbook = XLSX.read(arr, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert sheet to json matrix (2D array of cells)
+        const sheetData = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
+        
+        // Map all cells to strings, replacing null/undefined with empty string
+        const parsedLines = sheetData.map(row => 
+          row.map(cell => cell !== undefined && cell !== null ? String(cell) : '')
+        );
+
         if (parsedLines.length < 2) {
-          alert('Die CSV-Datei ist leer oder ungültig.');
+          alert('Die Excel-Datei ist leer oder ungültig.');
           return;
         }
 
@@ -672,7 +679,7 @@ export default function App() {
           const resolvedKeyIdx = keyIdx !== -1 ? keyIdx : 0;
           const resolvedMatchcodeIdx = matchcodeIdx !== -1 ? matchcodeIdx : 1;
           const resolvedKurztext1Idx = kurztext1Idx !== -1 ? kurztext1Idx : 2;
-          const resolvedPreisIdx = preisIdx !== -1 ? preisIdx : 13;
+          const resolvedPreisIdx = 13; // Festgelegt auf Spalte N (Index 13)
           const resolvedMengeneinheitIdx = mengeneinheitIdx !== -1 ? mengeneinheitIdx : 14;
 
           let currentCategory = 'Allgemein';
@@ -722,11 +729,11 @@ export default function App() {
 
               // 4. Normal Position
               const preisStr = row[resolvedPreisIdx]?.trim() || '0';
-              const cleanPreisStr = preisStr.replace(/\./g, '').replace(',', '.');
-              const price = parseFloat(cleanPreisStr) || 0;
+              const price = Math.round(parseImportPrice(preisStr) * 100) / 100;
 
               let unit = row[resolvedMengeneinheitIdx]?.trim() || '';
               let name = kurztext1;
+              const nameS = row[18]?.trim() || '';
 
               if (!unit) {
                 const extracted = extractUnitAndCleanTitle(kurztext1);
@@ -737,6 +744,7 @@ export default function App() {
               newTiles.push({
                 id: key || `tile-imported-${i}`,
                 name: name,
+                nameS: nameS,
                 unit: unit,
                 price: price,
                 color: hashCategoryToColor(currentCategory),
@@ -761,7 +769,7 @@ export default function App() {
               
               setTimeout(() => {
                 if (newTiles.length === 0) {
-                  alert('Keine gültigen Positionen in der CSV-Datei gefunden.');
+                  alert('Keine gültigen Positionen in der Excel-Datei gefunden.');
                   setImportProgress(null);
                   return;
                 }
@@ -777,11 +785,11 @@ export default function App() {
         }, 100);
       } catch (err) {
         console.error(err);
-        alert('Fehler beim Parsen der CSV-Datei.');
+        alert('Fehler beim Parsen der Excel-Datei.');
         setImportProgress(null);
       }
     };
-    reader.readAsText(file, 'ISO-8859-1');
+    reader.readAsArrayBuffer(file);
   };
 
   return (
@@ -830,24 +838,24 @@ export default function App() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">App-Version</p>
-                        <p className="text-sm font-bold text-[#141414]">v1.1.5</p>
+                        <p className="text-sm font-bold text-[#141414]">v1.1.12</p>
                       </div>
                     </div>
 
-                    {/* Import CSV row */}
+                    {/* Import Excel row */}
                     <div className="px-4 py-3">
                       <label 
-                        htmlFor="csv-file-input"
+                        htmlFor="xlsx-file-input"
                         className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gray-50 hover:bg-gray-100 text-[#141414]/70 hover:text-[#141414] text-xs font-bold rounded-lg transition-all cursor-pointer"
                       >
                         <Upload className="w-3.5 h-3.5 text-[#141414]/50" />
-                        Katalog importieren (.csv)
+                        Katalog importieren (.xlsx)
                       </label>
                       <input
-                        id="csv-file-input"
+                        id="xlsx-file-input"
                         type="file"
-                        accept=".csv"
-                        onChange={handleImportCSV}
+                        accept=".xlsx"
+                        onChange={handleImportXlsx}
                         className="hidden"
                       />
                     </div>
@@ -890,7 +898,7 @@ export default function App() {
                   Projekt
                 </h2>
                 <p className="text-xs text-[#141414]/60 mt-0.5">
-                  Wähle das aktive Projekt
+                  Aktive Projektinformationen
                 </p>
               </div>
               <button
@@ -906,63 +914,21 @@ export default function App() {
               </button>
             </div>
 
-            {/* Unified Project Selector Container */}
-            <div className="bg-white border border-[#141414]/10 rounded-2xl overflow-hidden divide-y divide-[#141414]/5 shadow-3xs">
-              
-              {/* Row 1: Project Selector Dropdown */}
-              <div className="relative flex items-center bg-white hover:bg-gray-50 text-[#141414] px-3.5 py-3 cursor-pointer">
-                <FolderOpen className="w-4 h-4 text-brand-accent1 mr-3 flex-shrink-0" />
-                {projects.length > 0 ? (
-                  <select
-                    id="project-selector"
-                    value={activeProjectId || ''}
-                    onChange={(e) => {
-                      const pid = e.target.value;
-                      setActiveProjectId(pid);
-                      const p = projects.find(proj => proj.id === pid);
-                      setActiveRoomId(p?.rooms[0]?.id || null);
-                      setIsSidebarOpen(false);
-                    }}
-                    className="bg-transparent text-sm font-bold pr-6 focus:outline-none cursor-pointer w-full appearance-none truncate"
-                  >
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-xs text-[#141414]/40">Kein Projekt angelegt</span>
-                )}
-                <ChevronDown className="w-4 h-4 text-[#141414]/45 absolute right-4 pointer-events-none" />
-              </div>
-
-              {/* Row 2: Edit & Delete buttons */}
-              {activeProject && (
-                <div className="flex divide-x divide-[#141414]/5 text-xs text-[#141414]/70">
-                  <button
-                    id="btn-edit-project"
-                    onClick={() => {
-                      setProjectToEdit(activeProject);
-                      setIsProjectModalOpen(true);
-                    }}
-                    className="flex-1 py-3 hover:bg-gray-50 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
-                    title="Projekt Details bearbeiten"
-                  >
-                    <FileEdit className="w-3.5 h-3.5" /> Bearbeiten
-                  </button>
-                  <button
-                    id="btn-delete-project"
-                    onClick={() => handleDeleteProject(activeProject.id)}
-                    className="flex-1 py-3 hover:bg-red-50 text-red-500 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
-                    title="Projekt komplett löschen"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Löschen
-                  </button>
+            {/* Project Details Display Card */}
+            {activeProject ? (
+              <div className="bg-white border border-[#141414]/10 rounded-2xl p-4 shadow-3xs text-xs space-y-2">
+                <div>
+                  <h3 className="font-bold text-sm text-[#141414] truncate">{activeProject.name}</h3>
+                  {activeProject.street && <p className="text-[#141414]/60 mt-1">{activeProject.street}</p>}
+                  {activeProject.zipCity && <p className="text-[#141414]/60">{activeProject.zipCity}</p>}
+                  {activeProject.email && <p className="text-[#141414]/50 mt-2 truncate font-mono">{activeProject.email}</p>}
                 </div>
-              )}
-
-            </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-[#141414]/10 rounded-2xl p-4 text-center text-xs text-[#141414]/40 shadow-3xs">
+                Kein aktives Projekt. Klicke auf "+", um eines zu erstellen.
+              </div>
+            )}
           </div>
 
           {activeProject && (
@@ -981,6 +947,7 @@ export default function App() {
                 }}
                 onEditRoom={handleEditRoom}
                 onDeleteRoom={handleDeleteRoom}
+                onReorderRooms={handleReorderRooms}
               />
 
             </>

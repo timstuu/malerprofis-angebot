@@ -114,7 +114,7 @@ export const ServiceTileGrid: React.FC<ServiceTileGridProps> = ({
                     className={`relative bg-white border border-[#141414]/5 ${colors.hover} rounded-2xl p-4 flex flex-col justify-between items-stretch transition-all duration-250 shadow-3xs cursor-pointer group active:scale-95 min-h-[100px]`}
                   >
                     {/* Service Info (Top Left Aligned) */}
-                    <h3 className="text-xs font-bold text-[#141414] tracking-tight leading-snug font-sans text-left line-clamp-2">
+                    <h3 className="text-sm font-bold text-[#141414] tracking-tight leading-snug font-sans text-left line-clamp-2">
                       {tile.name}
                     </h3>
 

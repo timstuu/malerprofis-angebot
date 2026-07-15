@@ -10,6 +10,7 @@ import { Project } from '../types';
  */
 export function generateGaebXml(project: Project): string {
   const dateStr = project.date || new Date().toISOString().split('T')[0];
+  const timeStr = new Date().toTimeString().split(' ')[0]; // HH:MM:SS
   
   const escapeXml = (unsafe: string) => {
     return unsafe.replace(/[<>&'"]/g, (c) => {
@@ -24,6 +25,10 @@ export function generateGaebXml(project: Project): string {
     });
   };
 
+  const zipCityParts = (project.zipCity || '').trim().split(/\s+/);
+  const zipCode = zipCityParts[0] || '';
+  const cityName = zipCityParts.slice(1).join(' ') || '';
+
   let xml = `<?xml version="1.0" encoding="utf-8"?>\n`;
   xml += `<GAEB xmlns="http://www.gaeb.de/GAEB_DA_XML/DA83/3.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gaeb.de/GAEB_DA_XML/DA83/3.3 GAEB_DA_XML_3.3.xsd">\n`;
   
@@ -32,12 +37,32 @@ export function generateGaebXml(project: Project): string {
   xml += `    <Version>3.3</Version>\n`;
   xml += `    <VersDate>2021-05</VersDate>\n`;
   xml += `    <Date>${dateStr}</Date>\n`;
+  xml += `    <Time>${timeStr}</Time>\n`;
   xml += `    <ProgSystem>Malerprofis Angebote</ProgSystem>\n`;
   xml += `  </GAEBInfo>\n`;
 
   // Award block
   xml += `  <Award>\n`;
   xml += `    <DP>83</DP>\n`;
+  
+  // Client details block
+  xml += `    <Client>\n`;
+  xml += `      <Address>\n`;
+  xml += `        <Name1>${escapeXml(project.name)}</Name1>\n`;
+  if (project.street) {
+    xml += `        <Street>${escapeXml(project.street)}</Street>\n`;
+  }
+  if (zipCode) {
+    xml += `        <PostalCode>${escapeXml(zipCode)}</PostalCode>\n`;
+  }
+  if (cityName) {
+    xml += `        <City>${escapeXml(cityName)}</City>\n`;
+  }
+  if (project.email) {
+    xml += `        <Email>${escapeXml(project.email)}</Email>\n`;
+  }
+  xml += `      </Address>\n`;
+  xml += `    </Client>\n`;
   
   // BoQ block
   xml += `    <BoQ>\n`;
@@ -55,7 +80,7 @@ export function generateGaebXml(project: Project): string {
     const roomNum = roomIdx + 1;
     xml += `        <BoQCtgy ID="R_${room.id}" RNoPart="${roomNum}">\n`;
     xml += `          <LblTx>\n`;
-    xml += `            <p><span>Raum: ${escapeXml(room.name)}</span></p>\n`;
+    xml += `            <p><span>${escapeXml(room.name)}</span></p>\n`;
     xml += `          </LblTx>\n`;
     xml += `          <BoQBody>\n`;
     
@@ -75,7 +100,7 @@ export function generateGaebXml(project: Project): string {
         xml += `                    <OutlineText>\n`;
         xml += `                      <OutlTxt>\n`;
         xml += `                        <TextOutlTxt>\n`;
-        xml += `                          <span>${escapeXml(pos.name)}</span>\n`;
+        xml += `                          <span>${escapeXml(pos.nameS || pos.name)}</span>\n`;
         xml += `                        </TextOutlTxt>\n`;
         xml += `                      </OutlTxt>\n`;
         xml += `                    </OutlineText>\n`;

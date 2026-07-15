@@ -13,12 +13,14 @@ export interface ServiceTile {
   category?: string; // Tab/Category association
   subcategory?: string; // Sub-tab/Subcategory association
   key?: string; // Original key from CSV
+  nameS?: string; // Column S from Excel
 }
 
 export interface Position {
   id: string;
   tileId: string;
   name: string;
+  nameS?: string; // Column S from Excel
   quantity: number;
   unit: string;
   price: number;
