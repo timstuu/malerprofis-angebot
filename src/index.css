@@ -33,3 +33,23 @@
     display: none;
   }
 }
+
+@keyframes download-bounce-down {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(5px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+  70% {
+    transform: translateY(2px);
+  }
+}
+
+.animate-download-bounce {
+  animation: download-bounce-down 0.8s ease-in-out;
+}
+

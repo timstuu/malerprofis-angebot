@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Download, Check } from 'lucide-react';
 import { ExportSettings, Project } from '../types';
-import { generateHandicraftCSV, downloadCSVFile } from '../utils/exportUtils';
+import { generateGaebXml, downloadGaebFile } from '../utils/exportUtils';
 
 interface ExportSettingsPanelProps {
   project: Project;
@@ -17,7 +17,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
   project,
   settings,
 }) => {
-  const [showToast, setShowToast] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Calculate statistics
   const roomCount = project.rooms.length;
@@ -28,7 +28,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
   );
 
   const triggerExport = () => {
-    const csvContent = generateHandicraftCSV(project, settings);
+    const xmlContent = generateGaebXml(project);
     
     // Build standard filename based on template
     const nameParts = project.name.trim().split(/\s+/);
@@ -47,29 +47,23 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
       .replace('{date}', year)
       .replace('{street}', cleanStreet);
       
-    if (!filename.endsWith('.csv')) {
-      filename += '.csv';
+    if (!filename.endsWith('.x83')) {
+      filename += '.x83';
     }
 
-    downloadCSVFile(csvContent, filename, settings.includeBOM);
+    downloadGaebFile(xmlContent, filename);
     
-    // Show toast notification
-    setShowToast(true);
+    // Trigger download animation
+    setIsAnimating(true);
     setTimeout(() => {
-      setShowToast(false);
-    }, 4000);
+      setIsAnimating(false);
+    }, 800);
   };
 
   return (
     <div className="w-full flex flex-col space-y-4 relative text-[#141414]" id="export-panel">
       
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#141414] text-white text-[11px] font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 z-50 animate-bounce">
-          <Check className="w-3.5 h-3.5 text-brand-accent2" />
-          <span>Datei erfolgreich heruntergeladen!</span>
-        </div>
-      )}
+
 
       {/* Header section (container-less) */}
       <div>
@@ -105,7 +99,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
 
         {/* Export Button */}
         <button
-          id="btn-export-handicraft"
+          id="btn-export-gaeb"
           onClick={triggerExport}
           disabled={positionCount === 0}
           className={`w-full py-3.5 px-4 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
@@ -114,7 +108,7 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
               : 'bg-brand-accent1 hover:bg-brand-accent1/90 text-white shadow-3xs border-none'
           }`}
         >
-          <Download className="w-4 h-4" /> HANDICRAFT-Export (.csv)
+          <Download className={`w-4 h-4 ${isAnimating ? 'animate-download-bounce' : ''}`} /> GAEB-Export (.x83)
         </button>
       </div>
 

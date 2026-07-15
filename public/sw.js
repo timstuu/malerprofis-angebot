@@ -1,4 +1,4 @@
-const CACHE_NAME = 'malerprofis-cache-v1.1.3';
+const CACHE_NAME = 'malerprofis-cache-v1.1.5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

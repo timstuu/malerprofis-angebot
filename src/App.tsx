@@ -830,7 +830,7 @@ export default function App() {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">App-Version</p>
-                        <p className="text-sm font-bold text-[#141414]">v1.1.3</p>
+                        <p className="text-sm font-bold text-[#141414]">v1.1.5</p>
                       </div>
                     </div>
 

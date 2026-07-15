@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, Home, Edit3, Trash2, Check, X } from 'lucide-react';
+import { Plus, Home, FileEdit, Trash2, Check, X } from 'lucide-react';
 import { Room } from '../types';
 
 interface RoomListProps {
@@ -205,7 +205,7 @@ export const RoomList: React.FC<RoomListProps> = ({
                       className="flex-1 py-2.5 hover:bg-gray-100 flex items-center justify-center gap-1.5 font-bold cursor-pointer transition-all"
                       title="Raum umbenennen"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-brand-accent1" /> Bearbeiten
+                      <FileEdit className="w-3.5 h-3.5" /> Bearbeiten
                     </button>
                     <button
                       id={`btn-delete-room-${room.id}`}
