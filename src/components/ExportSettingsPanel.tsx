@@ -76,12 +76,12 @@ export const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
       </div>
 
       {/* Card 1: Statistics (Rooms & Positions) */}
-      <div className="bg-white border border-[#141414]/10 rounded-2xl overflow-hidden divide-y divide-[#141414]/5 shadow-3xs text-xs">
-        <div className="p-3.5 flex justify-between items-center">
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="bg-white border border-[#141414]/10 rounded-xl p-3 flex justify-between items-center shadow-3xs">
           <span className="text-[#141414]/60 font-semibold">Räume</span>
           <span className="font-bold text-[#141414]">{roomCount}</span>
         </div>
-        <div className="p-3.5 flex justify-between items-center">
+        <div className="bg-white border border-[#141414]/10 rounded-xl p-3 flex justify-between items-center shadow-3xs">
           <span className="text-[#141414]/60 font-semibold">Positionen</span>
           <span className="font-bold text-[#141414]">{positionCount}</span>
         </div>

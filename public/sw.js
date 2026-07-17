@@ -1,4 +1,4 @@
-const CACHE_NAME = 'malerprofis-cache-v1.1.12';
+const CACHE_NAME = 'malerprofis-cache-v1.1.14';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -38,6 +38,17 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/@') ||
+    url.searchParams.has('t') ||
+    url.searchParams.has('import')
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

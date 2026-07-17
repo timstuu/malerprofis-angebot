@@ -809,7 +809,7 @@ const parseImportPrice = (str: string): number => {
       }`}>
         {/* Sidebar Header: Logo, Settings & Close Button */}
         <div className="p-4 border-b border-[#141414]/5 flex items-center justify-between">
-          <img src="/icons/logo.png" className="h-10 w-auto" alt="Malerprofis Uderstadt Logo" referrerPolicy="no-referrer" />
+          <img src="./icons/logo.png" className="h-10 w-auto" alt="Malerprofis Uderstadt Logo" referrerPolicy="no-referrer" />
           <div className="flex items-center gap-1">
             {/* Settings Icon with Popover */}
             <div className="relative">
@@ -838,7 +838,7 @@ const parseImportPrice = (str: string): number => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-[#141414]/40 uppercase tracking-wider">App-Version</p>
-                        <p className="text-sm font-bold text-[#141414]">v1.1.12</p>
+                        <p className="text-sm font-bold text-[#141414]">v1.1.14</p>
                       </div>
                     </div>
 
@@ -978,7 +978,7 @@ const parseImportPrice = (str: string): number => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <img src="/icons/logo.png" className="h-8 w-auto" alt="Logo" referrerPolicy="no-referrer" />
+            <img src="./icons/logo.png" className="h-8 w-auto" alt="Logo" referrerPolicy="no-referrer" />
           </div>
           {activeProject && (
             <div className="text-right max-w-[180px] sm:max-w-xs">
